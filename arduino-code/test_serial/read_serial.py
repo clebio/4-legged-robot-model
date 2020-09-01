@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import serial
 import time
-from random import randint
+from random import randint, random
 
 loopTime = 0.0
 interval = 0.5
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     while True:
         if time.time() - loopTime >= randint(1, 3):
             loopTime = time.time()
-            parts = [loopTime, 0, 3.1415, -1]
+            parts = [loopTime, randint(1, 100), random(), 100 * (0.5 - random())]
             message = "<{}>\n".format("#".join([str(p) for p in parts]))
             ser.write(bytes(message, "UTF-8"))
             continue

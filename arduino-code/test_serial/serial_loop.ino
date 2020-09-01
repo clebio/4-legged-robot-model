@@ -12,20 +12,34 @@ void setup()
     Serial.begin(115200);
 }
 
-int loopIdx = 0;
-int maxLoops = 50;
+void parseControls(String data)
+{
+    int endIdx = data.indexOf(endMarker);
+    int spc = 1;
+    while (spc <= endIdx || spc != -1)
+    {
+        int next = data.indexOf(spaceMarker, spc);
+        if (next == -1)
+        {
+            break;
+        }
+        String word = data.substring(spc, next);
+        spc = next + 1;
+        Serial.print(word + " ");
+    }
+    Serial.println("");
+}
+
 void loop()
 {
     if (Serial.available() > 0)
     {
         String data = Serial.readStringUntil('\n');
 
-        int endIdx = data.indexOf(endMarker);
-        if (data.startsWith(startMarker) && endIdx > 0)
+        if (data.startsWith(startMarker) && data.indexOf(endMarker) > 0)
         {
             Serial.print("Found control markers: ");
-            Serial.print(data);
-            Serial.println("");
+            parseControls(data);
         }
         else
         {
