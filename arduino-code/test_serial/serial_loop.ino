@@ -15,7 +15,10 @@ void setup()
 void parseControls(String data)
 {
     int endIdx = data.indexOf(endMarker);
+    String word = "";
+    int wordIdx = 0;
     int spc = 1;
+
     while (spc <= endIdx || spc != -1)
     {
         int next = data.indexOf(spaceMarker, spc);
@@ -23,9 +26,23 @@ void parseControls(String data)
         {
             break;
         }
-        String word = data.substring(spc, next);
+        word = data.substring(spc, next);
+        // String remainder = data.substring(next);
+        wordIdx++;
+
+        // if (isAlpha(word.charAt(0)))
+        if (wordIdx == 1)
+        {
+            // dispatch(word, remainder);
+            Serial.print("[");
+            Serial.print(word + "] ");
+        }
+        else
+        {
+            Serial.print(word + " ");
+        }
+
         spc = next + 1;
-        Serial.print(word + " ");
     }
     Serial.println("");
 }
