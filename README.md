@@ -24,3 +24,9 @@ All the info at:   https://hackaday.io/project/171456-diy-hobby-servos-quadruped
 
 Here is a simple diagram of how the robot is working:
 ![alt text](https://github.com/miguelasd688/4-legged-robot-model/blob/master/esquema.jpg)
+
+
+## URDF visualization
+
+    pipenv install --dev
+    urdf_to_graphiz quadruped.urdf
