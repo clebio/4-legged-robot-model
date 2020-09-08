@@ -98,8 +98,8 @@ while True:
         logger.info("Shutting down")
         if ARDUINO:
             arduino.serialSend("<QUIT>")
-            line = arduino.arduino.readline().decode("utf-8").rstrip()
-            logger.info(f"Shutdown response: {line}")
+            # line = arduino.arduino.readline().decode("utf-8").rstrip()
+            # logger.info(f"Shutdown response: {line}")
         break
 
     arduino_response = [0 for _ in range(6)]
@@ -116,13 +116,13 @@ while True:
     FRa, FLa, BRa, BLa, _ = robotKinematics.solve(
         orn + commandOrn, pos + commandPose, bodytoFeet
     )
-    pulses = [*FRa, *FLa, *BRa, *BLa]
+    pulses = [np.rad2deg(p) for p in [*FRa, *FLa, *BRa, *BLa]]
     logger.debug(pulses)
     # pulses = angleToPulse.convert(pulses)
-    message = "Send: <SERVO#{}>\n".format(
+    message = "<SERVO#{}>\n".format(
         "#".join(f"{i}~{str(c)}" for i, c in enumerate(pulses))
     )
-    logger.info(message)
+    logger.info(f"Sending: {message}")
     if ARDUINO:
         arduino.serialSend(message)
 

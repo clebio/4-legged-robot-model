@@ -39,7 +39,7 @@ String moveServos(String instructions)
     String word = "";
     int wordIdx = 0;
     int spc = 1;
-    String response = "";
+    String response = "FAIL";
 
     // Serial.println(instructions);
     // #0~1239#1~1893#2~397#3~1570#4~439#5~1887#6~1484#7~379#8~658#9~871#10~1202#11~786
@@ -47,6 +47,7 @@ String moveServos(String instructions)
     {
         return "No servos configured";
     }
+    response = "";
 
     while (wordIdx < NUM_SERVOS && spc > 0)
     {
@@ -112,13 +113,16 @@ void loop()
         {
             // The data we read is a control string, "<...>"
             String control = data.substring(1, data.length() - 1);
-            Serial.println(dispatch(control));
+            String response = "<";
+            response.concat(dispatch(control));
+            response.concat(">");
+            Serial.println(response);
         }
         else
         {
             // Data received is not control, so just echo whatever it is
-            Serial.print("You sent: ");
-            Serial.println(data);
+            // Serial.print("You sent: ");
+            // Serial.println(data);
         }
     }
 

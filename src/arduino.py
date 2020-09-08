@@ -56,9 +56,6 @@ class ArduinoSerial:
         logging.info(ord(x))
 
     def serialReceive(self):
-        startMarker = 60
-        endMarker = 62
-
         try:
             line = self.arduino.readline()
         except ValueError as e:
