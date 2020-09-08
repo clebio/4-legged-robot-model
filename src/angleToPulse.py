@@ -4,25 +4,36 @@
 Created on Mon Mar  9 16:27:16 2020
 
 @author: miguel-asd
+
+Updates on September, 2020
+@author: clebio
 """
 import numpy as np
+from collections import namedtuple
 
-def convert(FR_angles, FL_angles, BR_angles, BL_angles):
-    pulse = np.empty([12])
-    #FR
-    pulse[0] = int(-10.822 * np.rad2deg(-FR_angles[0])) + 950
-    pulse[1] = int(-10.822 * np.rad2deg(FR_angles[1])) + 2280
-    pulse[2] = int(10.822 * (np.rad2deg(FR_angles[2]) + 90)) + 1000
-    #FL
-    pulse[3] = int(10.822 * np.rad2deg(FL_angles[0])) + 1020 
-    pulse[4] = int(10.822 * np.rad2deg(FL_angles[1])) + 570
-    pulse[5] = int(-10.822 * (np.rad2deg(FL_angles[2]) + 90)) + 1150
-    #BR
-    pulse[6] = int(10.822 * np.rad2deg(-BR_angles[0])) + 1060 
-    pulse[7] = int(-10.822 * np.rad2deg(BR_angles[1])) + 2335 
-    pulse[8] = int(10.822 * (np.rad2deg(BR_angles[2]) + 90)) + 1200
-    #BL
-    pulse[9] = int(-10.822 * np.rad2deg(BL_angles[0])) + 890
-    pulse[10] = int(10.822 * np.rad2deg(BL_angles[1])) + 710
-    pulse[11] = int(-10.822 * (np.rad2deg(BL_angles[2]) + 90)) + 1050
+s = namedtuple("servo_config", ["center", "rotation"])
+NUM_SERVOS = 12
+servo_configs = [s(1000, 0) for _ in range(NUM_SERVOS)]
+#     s(950, 1),  # FR
+#     s(800, 1),
+#     s(1000, 90),
+#     s(1020, 1),  # FL
+#     s(570, 1),
+#     s(1150, 90),
+#     s(1060, 1),  # BR
+#     s(2335, 1),
+#     s(1200, 90),
+#     s(890, 1),  # BL
+#     s(710, 1),
+#     s(1050, 90),
+# ]
+
+
+def convert(angles):
+    """Transform angle measures to servo microseconds, accounting for specific servo configs"""
+    multiplier = -10.822
+    pulse = np.empty([len(servo_configs)])
+
+    for k, s in enumerate(servo_configs):
+        pulse[k] = int(s.rotation + multiplier * np.rad2deg(-angles[k])) + s.center
     return pulse

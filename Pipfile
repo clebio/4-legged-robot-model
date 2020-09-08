@@ -6,6 +6,8 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+keyboard = "*"
+simple-pid = "*"
 
 [requires]
 python_version = "3.7"
