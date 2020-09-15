@@ -42,20 +42,16 @@ class ArduinoSerial:
         self.arduino = serial.Serial(port, 115200, timeout=timeout)
         self.arduino.flush()
         self.arduino.setDTR(True)
+        self.interval = interval
 
-        self.lastTime = 0.0
-        self.previousMillis = 0.0
-        self.interval = interval  # arduino loop running at 20 ms
-
-    def serialSend(self, command):
+    def send(self, command):
         self.arduino.write(bytes(command, encoding="utf8"))
-        self.lastTime = time.time()
 
     def test(self):
         x = self.arduino.read()
         logging.info(ord(x))
 
-    def serialReceive(self):
+    def receive(self):
         try:
             line = self.arduino.readline()
         except ValueError as e:

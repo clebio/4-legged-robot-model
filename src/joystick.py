@@ -30,6 +30,7 @@ class Joystick:
         self.CoM_pos = np.zeros(3)
         self.CoM_orn = np.zeros(3)
         self.calibration = 0
+        self.offset = 127
 
         self.device = InputDevice(path)
         self.selector = selectors.DefaultSelector()
@@ -41,6 +42,8 @@ class Joystick:
         self.selector.close()
 
     def read(self):
+        oldVal = self.offset
+        valIdx = 0
         for key, _ in self.selector.select():
             for event in key.fileobj.read():
                 logger.debug(event)
@@ -87,15 +90,26 @@ class Joystick:
                     co = absevent.event.code
                     val = absevent.event.value
 
+                    # TODO:
+                    # Sometimes the inputs from the joystick jump around erratically
+                    # -32010 -32000 200 -32001 -32011 ...
+                    # when this happens, we should ignore those inputs temporarily
+                    if abs(oldVal - val) > self.offset and valIdx < 10:
+                        logging.debug(f"Input event fluctuations! {val}|{oldVal}")
+                        oldVal = val
+                        valIdx += 1
+                        continue
+                    oldVal = val
+
                     if ecodes.bytype[ty][co] == "ABS_HAT0X":
-                        self.L3[0] = val - 127
+                        self.L3[0] = val - self.offset
                     elif ecodes.bytype[ty][co] == "ABS_HAT0Y":
-                        self.L3[1] = val - 127
+                        self.L3[1] = val - self.offset
 
                     elif ecodes.bytype[ty][co] == "ABS_RX":
-                        self.R3[0] = val - 127
+                        self.R3[0] = val - self.offset
                     elif ecodes.bytype[ty][co] == "ABS_RY":
-                        self.R3[1] = val - 127
+                        self.R3[1] = val - self.offset
 
         if self.poseMode == False:
             self.V = np.sqrt(self.L3[1] ** 2 + self.L3[0] ** 2) / 100.0
@@ -140,4 +154,4 @@ def setup_joystick():
 if __name__ == "__main__":
     joystick = setup_joystick()
     while True:
-        print(joystick.read())
+        logger.info(joystick.read())

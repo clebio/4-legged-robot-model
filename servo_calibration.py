@@ -20,11 +20,6 @@ from evdev import ecodes
 from src.joystick import Joystick, setup_joystick
 from src.arduino import ArduinoSerial, get_ACM
 
-# from src.kinematic_model import robotKinematics
-# from src import angleToPulse
-# from src.gaitPlanner import trotGait
-# from src.stabilization import stabilize
-
 
 def signal_handler(signum, frame):
     print(f"Signal handler called with {signum}")
@@ -35,9 +30,6 @@ if __name__ == "__main__":
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
-    # robotKinematics = robotKinematics()
-    # trot = trotGait()
-    # control = stabilize()
     joystick = setup_joystick()
 
     ARDUINO = False if environ.get("NO_ARDUINO") else True
@@ -62,7 +54,7 @@ if __name__ == "__main__":
         if isinstance(oh_joy[0], str) and oh_joy[0] == "Shutdown!":
             logger.info("Shutting down")
             if ARDUINO:
-                arduino.serialSend("<QUIT>")
+                arduino.send("<QUIT>")
                 line = arduino.arduino.readline().decode("utf-8").rstrip()
                 logger.info(f"Shutdown response: {line}")
             logger.info("Done with calibration")
@@ -79,7 +71,7 @@ if __name__ == "__main__":
                 Yacc,
                 realRoll,
                 realPitch,
-            ) = arduino.serialReceive()
+            ) = arduino.receive()
 
         pos = np.sin(now)
         pulses = [pos for _ in range(12)]
@@ -87,10 +79,12 @@ if __name__ == "__main__":
         command = [90 + np.rad2deg(a) for a in pulses]
 
         message = "<SERVO#{}>\n".format(
-            "#".join(f"{i}~{str(c)}" for i, c in enumerate(command))
+            "#".join(f"{i}~{str(c)}" for i, round(c, 3) in enumerate(command))
         )
-        logger.debug(f"Sending: {message}")
+
+        log_message = " ".join(str(round(c, 2)) for c in limited_angles)
+        logger.info(f"Commands: {log_message}")
         if ARDUINO:
-            arduino.serialSend(message)
+            arduino.send(message)
             # line = arduino.arduino.readline().decode("utf-8").rstrip()
             # logger.info(line)
