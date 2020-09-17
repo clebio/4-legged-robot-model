@@ -21,7 +21,7 @@ Run:
 
     robot_main_RPI.py
 
-You can also run its telemetry. 
+You can also run its telemetry.
 
 * Pandas and matplotlib needed.
 
@@ -126,3 +126,8 @@ cd quadruped
 pushd arduino; make upload; popd
 python servo_calibration.py
 ```
+
+## URDF visualization
+
+    pipenv install --dev
+    urdf_to_graphiz quadruped.urdf

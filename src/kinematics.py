@@ -43,7 +43,7 @@ def checkdomain(D):
 "    |/____________  x       "
 """
 # IK equations now written in pybullet frame.
-def solve(coordinates, coxa, femur, tibia, orientation=1):
+def _solve(coordinates, coxa, femur, tibia, orientation=1):
     x0, x1, x2 = coordinates
     _c1c2 = np.sqrt(x1 ** 2 + (-x2) ** 2 - coxa ** 2)
 
@@ -59,28 +59,6 @@ def solve(coordinates, coxa, femur, tibia, orientation=1):
     )
     angles = np.array([-theta, alpha, gamma])
     return angles
-
-
-# target_angles = np.matrix(
-#     [
-#         0,
-#         np.pi / 4,
-#         -np.pi / 2,
-#         0,  # BR
-#         0,
-#         np.pi / 4,
-#         -np.pi / 2,
-#         0,  # BL
-#         0,
-#         np.pi / 4,
-#         -np.pi / 2,
-#         0,  # FL
-#         0,
-#         np.pi / 4,
-#         -np.pi / 2,
-#         0,  # FR
-#     ]
-# )
 
 
 class Quadruped:
@@ -145,10 +123,10 @@ class Quadruped:
         _BRcoord = geo.transform(BRcoord, undoOrn, undoPos)
         _BLcoord = geo.transform(BLcoord, undoOrn, undoPos)
 
-        FR_angles = solve(_FRcoord, self.coxa, self.femur, self.tibia, -1)
-        FL_angles = solve(_FLcoord, self.coxa, self.femur, self.tibia, 1)
-        BR_angles = solve(_BRcoord, self.coxa, self.femur, self.tibia, -1)
-        BL_angles = solve(_BLcoord, self.coxa, self.femur, self.tibia, 1)
+        FR_angles = _solve(_FRcoord, self.coxa, self.femur, self.tibia, -1)
+        FL_angles = _solve(_FLcoord, self.coxa, self.femur, self.tibia, 1)
+        BR_angles = _solve(_BRcoord, self.coxa, self.femur, self.tibia, -1)
+        BL_angles = _solve(_BLcoord, self.coxa, self.femur, self.tibia, 1)
 
         _bodytofeetFR = _bodytoFR0 + _FRcoord
         _bodytofeetFL = _bodytoFL0 + _FLcoord

@@ -11,6 +11,7 @@ keyboard = "*"
 simple-pid = "*"
 numpy = "*"
 pybullet = "*"
+gym = "*"
 
 [requires]
 python_version = "3.7"

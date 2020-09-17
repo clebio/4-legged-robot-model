@@ -6,32 +6,31 @@ Created on Sun Mar 15 19:51:40 2020
 @author: linux-asd
 """
 
-import pybullet as p
+import pybullet as pb
 import numpy as np
 import time
 import pybullet_data
-from pybullet_debuger import pybulletDebug
-from src.kinematic_model import robotKinematics
+
+from src.pybullet_debugger import pybulletDebug
+from src.kinematics import Quadruped
 from src.gaitPlanner import trotGait
 
-physicsClient = p.connect(p.GUI)  # or p.DIRECT for non-graphical version
-p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
-p.setGravity(0, 0, -9.8)
+physicsClient = pb.connect(pb.GUI)  # or pb.DIRECT for non-graphical version
+pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
+pb.setGravity(0, 0, -9.8)
 
 
 cubeStartPos = [0, 0, 0.2]
-FixedBase = False  # if fixed no plane is imported
-if FixedBase == False:
-    p.loadURDF("plane.urdf")
-boxId = p.loadURDF("4leggedRobot.urdf", cubeStartPos, useFixedBase=FixedBase)
+pb.loadURDF("plane.urdf")
+boxId = pb.loadURDF("4leggedRobot.urdf", cubeStartPos)
 
 jointIds = []
 paramIds = []
 time.sleep(0.5)
-for j in range(p.getNumJoints(boxId)):
-    #    p.changeDynamics(boxId, j, linearDamping=0, angularDamping=0)
-    info = p.getJointInfo(boxId, j)
-    print(info)
+for j in range(pb.getNumJoints(boxId)):
+    # pb.changeDynamics(boxId, j, linearDamping=0, angularDamping=0)
+    info = pb.getJointInfo(boxId, j)
+    # print(info)
     jointName = info[1]
     jointType = info[2]
     jointIds.append(j)
@@ -42,7 +41,7 @@ footBR_index = 11
 footBL_index = 15
 
 pybulletDebug = pybulletDebug()
-robotKinematics = robotKinematics()
+robotKinematics = Quadruped()
 trot = trotGait()
 
 # robot properties
@@ -60,52 +59,36 @@ bodytoFeet0 = np.matrix(
         [-Xdist / 2, Ydist / 2, -height],
     ]
 )
+# defines the offset between each foot step in this order (FR,FL,BR,BL)
+offset = np.array([0.5, 0.0, 0.0, 0.5])
 
-T = 0.5  # period of time (in seconds) of every step
-offset = np.array(
-    [0.5, 0.0, 0.0, 0.5]
-)  # defines the offset between each foot step in this order (FR,FL,BR,BL)
-
-p.setRealTimeSimulation(1)
+pb.setRealTimeSimulation(1)
 
 while True:
     timeNow = time.time()
-    pos, orn, L, angle, Lrot, T = pybulletDebug.cam_and_robotstates(boxId)
+    pos, orn, L, angle, Lrot, dT = pybulletDebug.cam_and_robotstates(boxId)
     # calculates the feet coord for gait, defining length of the step and direction (0º -> forward; 180º -> backward)
-    bodytoFeet = trot.loop(L, angle, Lrot, T, offset, bodytoFeet0)
+    bodytoFeet = trot.loop(L, angle, Lrot, dT, offset, bodytoFeet0)
 
-    #####################################################################################
-    #####   kinematics Model: Input body orientation, deviation and foot position    ####
-    #####   and get the angles, neccesary to reach that position, for every joint    ####
+    # kinematics Model: Input body orientation, deviation and foot position
+    # and get the angles, neccesary to reach that position, for every joint
     (
         FR_angles,
         FL_angles,
         BR_angles,
         BL_angles,
-        transformedBodytoFeet,
     ) = robotKinematics.solve(orn, pos, bodytoFeet)
 
     # move movable joints
-    for i in range(0, footFR_index):
-        p.setJointMotorControl2(
-            boxId, i, p.POSITION_CONTROL, FR_angles[i - footFR_index]
-        )
-    for i in range(footFR_index + 1, footFL_index):
-        p.setJointMotorControl2(
-            boxId, i, p.POSITION_CONTROL, FL_angles[i - footFL_index]
-        )
-    for i in range(footFL_index + 1, footBR_index):
-        p.setJointMotorControl2(
-            boxId, i, p.POSITION_CONTROL, BR_angles[i - footBR_index]
-        )
-    for i in range(footBR_index + 1, footBL_index):
-        p.setJointMotorControl2(
-            boxId, i, p.POSITION_CONTROL, BL_angles[i - footBL_index]
-        )
+    angles = [*FR_angles, *FL_angles, *BR_angles, *BL_angles]
 
-    p.stepSimulation()
+    # TODO: something something jointIds
+    indices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
+    for i, angle in enumerate(angles):
+        pb.setJointMotorControl2(boxId, indices[i], pb.POSITION_CONTROL, angle)
+    pb.stepSimulation()
 
     lastTime = time.time()
     loopTime = lastTime - timeNow
     time.sleep(0.05)
-p.disconnect()
+pb.disconnect()

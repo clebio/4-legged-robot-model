@@ -14,15 +14,16 @@ def f(n, k):
     return np.math.factorial(n) / (np.math.factorial(k) * np.math.factorial(n - k))
 
 
-def b(t, k, point, n=9):
-    """Bezier curve, with n+1 points"""
+def b(t, k, point, n=10):
+    """Bezier curve, with n points"""
+    n -= 1
     return point * f(n, k) * np.power(t, k) * np.power(1 - t, n - k)
 
 
 class trotGait:
     """Gait planner to move all feet
-    
-    This trajectory planning is mostly based on: 
+
+    This trajectory planning is mostly based on:
         https://www.researchgate.net/publication/332374021_Leg_Trajectory_Planning_for_Quadruped_Robots_with_High-Speed_Trot_Gait
     """
 
@@ -53,7 +54,7 @@ class trotGait:
 
     def calculateBezier_swing(self, phi_sw, V, angle):
         """phi between [0,1), angle in degrees
-        
+
         # curve generator https://www.desmos.com/calculator/xlpbe9bgll
         """
 
@@ -68,25 +69,20 @@ class trotGait:
         #            self.s = False
         ##            print('foot UP', self.s , phi)
 
-        X = (
-            np.abs(V)
-            * c
-            * np.array([-0.05, -0.06, -0.07, -0.07, 0.0, 0.0, 0.07, 0.07, 0.06, 0.05])
-        )
+        what_the_x = [-0.05, -0.06, -0.07, -0.07, 0.0, 0.0, 0.07, 0.07, 0.06, 0.05]
+        what_the_y = [0.05, 0.06, 0.07, 0.07, 0.0, -0.0, -0.07, -0.07, -0.06, -0.05]
+        what_the_z = [0.0, 0.0, 0.05, 0.05, 0.05, 0.06, 0.06, 0.06, 0.0, 0.0]
+        X = np.abs(V) * c * np.array(what_the_x)
+        Y = np.abs(V) * s * np.array(what_the_y)
+        Z = np.abs(V) * np.array(what_the_z)
 
-        Y = (
-            np.abs(V)
-            * s
-            * np.array([0.05, 0.06, 0.07, 0.07, 0.0, -0.0, -0.07, -0.07, -0.06, -0.05])
-        )
-
-        Z = np.abs(V) * np.array(
-            [0.0, 0.0, 0.05, 0.05, 0.05, 0.06, 0.06, 0.06, 0.0, 0.0]
-        )
         swingX = 0.0
         swingY = 0.0
         swingZ = 0.0
-        for i in range(10):  # sum all terms of the curve
+
+        assert len(what_the_x) == len(what_the_y) == len(what_the_z)
+        curve_len = len(what_the_x)
+        for i in range(curve_len):  # sum all terms of the curve
             swingX = swingX + b(phi_sw, i, X[i])
             swingY = swingY + b(phi_sw, i, Y[i])
             swingZ = swingZ + b(phi_sw, i, Z[i])
@@ -94,7 +90,10 @@ class trotGait:
         return swingX, swingY, swingZ
 
     def stepTrajectory(self, phi, V, angle, Wrot, centerToFoot):
-        """phi belong [0,1), angles in degrees"""
+        """phi belong [0,1), angles in degrees
+
+        returns coord: np.array(3)
+        """
         if phi >= 1:
             phi = phi - 1.0
         # step describes a circuference in order to rotate
@@ -146,10 +145,12 @@ class trotGait:
 
         return coord
 
-    def loop(self, V, angle, Wrot, dT, offset, bodytoFeet_):
+    def loop(self, V, angle, Wrot, dT, offset, b2f):
         """computes step trajectory for every foot
-        
-        Defining length of the step and direction (0º -> forward; 180º -> backward), L which is like velocity command, its angle, offset between each foot, period of time of each step and the initial vector from center of robot to feet.
+
+        b2f: local bodytoFeet (vs self.bodytoFeet)
+
+        Defining length of the step and direction (0º -> forward; 180º -> backward), L which is like velocity command, its angle, period of time of each step, offset between each foot, and the initial vector from center of robot to feet.
         """
         if dT <= 0.01:
             dT = 0.01
@@ -164,45 +165,44 @@ class trotGait:
             V,
             angle,
             Wrot,
-            np.squeeze(np.asarray(bodytoFeet_[0, :])),
+            np.squeeze(np.asarray(b2f[0, :])),
         )  # FR
-        self.bodytoFeet[0, 0] = bodytoFeet_[0, 0] + step_coord[0]
-        self.bodytoFeet[0, 1] = bodytoFeet_[0, 1] + step_coord[1]
-        self.bodytoFeet[0, 2] = bodytoFeet_[0, 2] + step_coord[2]
+        self.bodytoFeet[0, 0] = b2f[0, 0] + step_coord[0]
+        self.bodytoFeet[0, 1] = b2f[0, 1] + step_coord[1]
+        self.bodytoFeet[0, 2] = b2f[0, 2] + step_coord[2]
 
         step_coord = self.stepTrajectory(
             self.phi + offset[1],
             V,
             angle,
             Wrot,
-            np.squeeze(np.asarray(bodytoFeet_[1, :])),
+            np.squeeze(np.asarray(b2f[1, :])),
         )  # FL
-        self.bodytoFeet[1, 0] = bodytoFeet_[1, 0] + step_coord[0]
-        self.bodytoFeet[1, 1] = bodytoFeet_[1, 1] + step_coord[1]
-        self.bodytoFeet[1, 2] = bodytoFeet_[1, 2] + step_coord[2]
+        self.bodytoFeet[1, 0] = b2f[1, 0] + step_coord[0]
+        self.bodytoFeet[1, 1] = b2f[1, 1] + step_coord[1]
+        self.bodytoFeet[1, 2] = b2f[1, 2] + step_coord[2]
 
         step_coord = self.stepTrajectory(
             self.phi + offset[2],
             V,
             angle,
             Wrot,
-            np.squeeze(np.asarray(bodytoFeet_[2, :])),
+            np.squeeze(np.asarray(b2f[2, :])),
         )  # BR
-        self.bodytoFeet[2, 0] = bodytoFeet_[2, 0] + step_coord[0]
-        self.bodytoFeet[2, 1] = bodytoFeet_[2, 1] + step_coord[1]
-        self.bodytoFeet[2, 2] = bodytoFeet_[2, 2] + step_coord[2]
+        self.bodytoFeet[2, 0] = b2f[2, 0] + step_coord[0]
+        self.bodytoFeet[2, 1] = b2f[2, 1] + step_coord[1]
+        self.bodytoFeet[2, 2] = b2f[2, 2] + step_coord[2]
 
         step_coord = self.stepTrajectory(
             self.phi + offset[3],
             V,
             angle,
             Wrot,
-            np.squeeze(np.asarray(bodytoFeet_[3, :])),
+            np.squeeze(np.asarray(b2f[3, :])),
         )  # BL
-        self.bodytoFeet[3, 0] = bodytoFeet_[3, 0] + step_coord[0]
-        self.bodytoFeet[3, 1] = bodytoFeet_[3, 1] + step_coord[1]
-        self.bodytoFeet[3, 2] = bodytoFeet_[3, 2] + step_coord[2]
+        self.bodytoFeet[3, 0] = b2f[3, 0] + step_coord[0]
+        self.bodytoFeet[3, 1] = b2f[3, 1] + step_coord[1]
+        self.bodytoFeet[3, 2] = b2f[3, 2] + step_coord[2]
         #
 
         return self.bodytoFeet
-

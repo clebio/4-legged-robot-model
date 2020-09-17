@@ -12,7 +12,7 @@ import csv
 import logging
 from os import environ
 
-from src.kinematic_model import robotKinematics
+from src.kinematics import Quadruped
 from src.joystick import Joystick, setup_joystick
 from src.arduino import ArduinoSerial, get_ACM
 from src import servo
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-robotKinematics = robotKinematics()
+robotKinematics = Quadruped()
 joystick = setup_joystick()
 
 ARDUINO = False if environ.get("NO_ARDUINO") else True
@@ -33,21 +33,6 @@ else:
     logging.info("Skipping Arduino setup!")
 trot = trotGait()
 control = stabilize()
-
-# robot properties
-"""initial safe position"""
-# angles
-# targetAngs = np.array([0 , np.pi/4 , -np.pi/2, 0 ,#BR
-#                         0 , np.pi/4 , -np.pi/2, 0 ,#BL
-#                         0 , np.pi/4 , -np.pi/2, 0 ,#FL
-#                         0 , np.pi/4 , -np.pi/2, 0 ])#FR
-
-# FR_0  to FR_4
-# FRcoord = np.matrix([0. , -3.6 , -0.15])
-# FLcoord = np.matrix([0. ,  3.6 , -0.15])
-# BRcoord = np.matrix([0. , -3.6 , -0.15])
-# BLcoord = np.matrix([0. ,  3.6 , -0.15])
-
 
 "initial foot position"
 # foot separation (0.182 -> tetta=0) and distance to floor
@@ -80,7 +65,7 @@ offset = np.array([0.0, 0.5, 0.5, 0.0])
 interval = 0.030
 
 # Save telemetry data.
-LOG_TELEMETRY = environ.get("LOG_TELEMETRY", True)
+LOG_TELEMETRY = environ.get("LOG_TELEMETRY", False)
 FIELDNAMES = ["t", "roll", "pitch", "battery"]
 if LOG_TELEMETRY:
     csv_file = open("telemetry/data.csv", "w")
@@ -146,4 +131,6 @@ while True:
         csv_writer.writerow(
             dict(zip(FIELDNAMES, [lastTime, realRoll, realPitch, battery]))
         )
-csv_file.close()
+
+if LOG_TELEMETRY:
+    csv_file.close()
