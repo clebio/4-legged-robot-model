@@ -16,21 +16,14 @@ from functools import partial
 from src.pybullet_debugger import pybulletDebug
 from src.kinematics import Quadruped
 from src.gaitPlanner import trotGait
+from src.web.app import server
+
+# from src.simulation import run as run_sim
 
 
-from src.simulation import setup_sim, run as run_sim
-
-INTERVAL = 0.05
-
-
-async def run():
+async def run(instance):
     """Loop the pybullet simulation indefinitely"""
-    instance = pb.connect(pb.GUI)
-    pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
-    pb.setGravity(0, 0, -9.8)
-    pb.setRealTimeSimulation(1)
-    # pb.connect(pb.GRAPHICS_CLIENT)
-    while pb.isConnected():
+    while True:
         timeNow = time.time()
         pos, orn, L, angle, Lrot, dT = instance.cam_and_robotstates(boxId)
         # calculates the feet coord for gait, defining length of the step and direction (0º -> forward; 180º -> backward)
@@ -82,9 +75,61 @@ def app(task_list):
 
 
 if __name__ == "__main__":
+
+    physicsClient = pb.connect(pb.GUI)  # or pb.DIRECT for non-graphical version
+    pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
+    pb.setGravity(0, 0, -9.8)
+
+    INTERVAL = 0.05
+
+    cubeStartPos = [0, 0, 0.2]
+    pb.loadURDF("plane.urdf")
+    boxId = pb.loadURDF("4leggedRobot.urdf", cubeStartPos)
+
+    jointIds = []
+    paramIds = []
+
+    for j in range(pb.getNumJoints(boxId)):
+        # pb.changeDynamics(boxId, j, linearDamping=0, angularDamping=0)
+        info = pb.getJointInfo(boxId, j)
+        # print(info)
+        jointName = info[1]
+        jointType = info[2]
+        jointIds.append(j)
+
+    footFR_index = 3
+    footFL_index = 7
+    footBR_index = 11
+    footBL_index = 15
+
+    instance = pybulletDebug()
+    robotKinematics = Quadruped()
+    trot = trotGait()
+
+    # robot properties
+    """initial foot position"""
+    # foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
+    Xdist = 0.20
+    Ydist = 0.15
+    height = 0.15
+    # body frame to foot frame vector
+    bodytoFeet0 = np.matrix(
+        [
+            [Xdist / 2, -Ydist / 2, -height],
+            [Xdist / 2, Ydist / 2, -height],
+            [-Xdist / 2, -Ydist / 2, -height],
+            [-Xdist / 2, Ydist / 2, -height],
+        ]
+    )
+    # defines the offset between each foot step in this order (FR,FL,BR,BL)
+    offset = np.array([0.5, 0.0, 0.0, 0.5])
+
+    pb.setRealTimeSimulation(1)
+
     # joystick = setup_joystick_async()
     TASKS = [
         # partial(read_joystick, joystick),
-        run,
+        partial(run, instance),
+        server,
     ]
     app(TASKS)
