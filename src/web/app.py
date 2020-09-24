@@ -18,9 +18,31 @@ async def handle_greeting(request):
     )
 
 
+async def websocket_handler(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    async for msg in ws:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.data == "close":
+                await ws.close()
+            else:
+                await ws.send_str(msg.data + "/answer")
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            logging.error(f"ws connection closed with exception {ws.exception()}")
+    # app.add_routes([web.get('/ws', websocket_handler)])
+
+    return ws
+
+
 @aiohttp_jinja2.template("index.j2")
 async def handle(request):
-    return {"title": "Here, now.", "text": f"Hello, Anonymous.", "app": request.app}
+    return {"title": "Here, now.", "text": f"Quadruped", "app": request.app}
+
+
+@aiohttp_jinja2.template("controls.j2")
+async def controls(request):
+    return {"app": request.app}
 
 
 async def handle_json(request):
@@ -46,6 +68,7 @@ async def server():
     routes = [
         web.route("*", "/", handle),
         web.get("/greet/{name}", handle_greeting),
+        web.get("/control", controls),
     ]
     app.add_routes(routes)
     # app.add_routes([web.route('*', '/path', all_handler)])

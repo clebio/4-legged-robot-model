@@ -1,9 +1,19 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>{{ title }}</title>
-    </head>
-    </div>
+{% extends "base.j2" %} 
+{% block title %}{{ title }}{% endblock %} 
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important {
+            color: #336699;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="grid-container fluid"></div>
+<div class="grid-x grid-padding-x">
+    <div class="cell medium-6 large-4">
         <h1>{{ text }}</h1>
-    </body>
-</html>
+    </div>
+</div>
+{% endblock %}
