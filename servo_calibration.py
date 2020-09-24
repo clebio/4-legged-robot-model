@@ -15,15 +15,8 @@ import logging
 from sys import exit
 from os import environ
 
-from evdev import ecodes
-
 from src.joystick import Joystick, setup_joystick
-from src.arduino import ArduinoSerial, get_ACM
-
-
-def signal_handler(signum, frame):
-    print(f"Signal handler called with {signum}")
-    exit(0)
+from src.arduino import get_ACM
 
 
 if __name__ == "__main__":

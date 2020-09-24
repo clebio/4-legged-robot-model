@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from evdev import InputDevice, categorize, ecodes, list_devices
+try:
+    from evdev import InputDevice, categorize, ecodes, list_devices
+except ModuleNotFoundError:
+    import inputs
 import numpy as np
 import logging
 import selectors
@@ -42,6 +45,11 @@ class Joystick:
         self.selector.close()
 
     def read(self):
+        """Read joystick inputs
+
+        Consider using exponential smoothing
+        https://www.statsmodels.org/stable/tsa.html#exponential-smoothing
+        """
         oldVal = self.offset
         valIdx = 0
         for key, _ in self.selector.select():
@@ -138,7 +146,18 @@ class Joystick:
 
 
 def setup_joystick():
-    devices = list_devices()
+    try:
+        from evdev import list_devices
+
+        devices = list_devices()
+    except ModuleNotFoundError:
+        from inputs import get_gamepad
+
+        devices = get_gamepad()
+        # events = get_gamepad()
+        # for event in events:
+        # print(event.ev_type, event.code, event.state)
+
     if not devices:
         raise ValueError("Failed to list any joysticks")
     for device in devices:
