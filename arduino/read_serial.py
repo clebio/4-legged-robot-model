@@ -14,7 +14,7 @@ import numpy as np
 logging.basicConfig(level=logging.INFO)
 
 loopTime = 0.0
-interval = 0.5
+interval = 0.2
 freqMulti = 2
 speed = 10
 
@@ -32,6 +32,8 @@ rad2pulse = lambda x: int(-speed * np.rad2deg(-x)) + 1500
 def parse(record):
     try:
         lines = record.decode("utf-8").strip()
+        if not lines:
+            return False
     except:
         lines = record
     try:
@@ -40,7 +42,7 @@ def parse(record):
         lines = [lines]
     for line in lines:
         try:
-            header, message = line.split("~")
+            header, message = line.split("#")
         except:
             header = ""
             message = line
