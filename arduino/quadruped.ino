@@ -4,18 +4,18 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-#define ENABLE_RELAY 0
-#define ENABLE_IMU 1
+#define ENABLE_RELAY 1
+#define ENABLE_IMU 0
 #define ENABLE_SERVO 0
 #define NUM_SERVOS 12
+const int RELAY_PIN = A0;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
-unsigned long loopTime;
+unsigned long loopTime = millis();
 unsigned long previousMillis = 0;
-const long interval = 20;
+const long interval = 200;
 const String startMarker = "<";
 const String endMarker = ">";
-const int RELAY_PIN = 3;
 
 Servo Servos[NUM_SERVOS];
 int pulses[NUM_SERVOS];
@@ -120,16 +120,19 @@ void setup_imu()
     bno.setExtCrystalUse(true);
 }
 
-void relay(int state = 0)
+String relayctl(String message)
 {
-    if (state == 0)
+    bool _RELAYED = LOW;
+    if (!ENABLE_RELAY)
     {
-        digitalWrite(RELAY_PIN, LOW);
+        return "RELAY#Disabled";
     }
-    else
+    if (message == "on" || message == "#on")
     {
-        digitalWrite(RELAY_PIN, HIGH);
+        _RELAYED = HIGH;
     }
+    digitalWrite(RELAY_PIN, _RELAYED);
+    return String(_RELAYED);
 }
 
 void setup()
@@ -140,7 +143,6 @@ void setup()
     }
     if (ENABLE_RELAY)
     {
-        // Relay
         pinMode(RELAY_PIN, OUTPUT);
     }
 
@@ -173,7 +175,7 @@ String moveServos(String instructions)
 {
     if (!ENABLE_SERVO)
     {
-        return "";
+        return "SERVOS#Disabled";
     }
     /*
         What println(instructions) looks like:
@@ -239,6 +241,10 @@ String dispatch(String data)
     {
         response = moveServos(message);
     }
+    if (type == "RELAY")
+    {
+        response = relayctl(message);
+    }
     if (type == "QUIT")
     {
         response = shutdown();
@@ -261,7 +267,10 @@ void loop()
             {
                 Serial.println(response);
             }
-            Serial.println(readIMU());
+            if (ENABLE_IMU)
+            {
+                Serial.println(readIMU());
+            }
         }
     }
 }

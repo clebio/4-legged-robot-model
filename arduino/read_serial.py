@@ -53,6 +53,7 @@ def parse(record):
 if __name__ == "__main__":
     ser = serial.Serial("/dev/ttyACM0", 115200, timeout=1)
     ser.flush()
+    relay = False
 
     while True:
         if time.time() - loopTime < interval:
@@ -61,7 +62,8 @@ if __name__ == "__main__":
 
         # TODO: https://github.com/pyserial/pyserial/blob/master/serial/tools/miniterm.py#L499
         record = ser.read(ser.in_waiting or 1)
-        parse(record)
+        logging.info(record.decode("utf-8").strip())
+        # parse(record)
 
         moves = []
         rad = np.sin(freqMulti * loopTime)
@@ -73,6 +75,10 @@ if __name__ == "__main__":
             moves.append(f"{i}~{dist}")
         message = "<SERVO#{}>\n".format("#".join(moves))
 
+        state = "on" if relay else "off"
+        logging.info(f"Toggling relay {state}")
+        message = f"<RELAY#{state}>\n"
+        relay = not relay
+
         # logging.info(f"Sending: {message}")
-        # TODO: Why does this block readIMU ?
         ser.write(bytes(message, "utf-8"))
