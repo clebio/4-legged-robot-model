@@ -72,9 +72,10 @@ class Quadruped:
         femur=0.10,
         tibia=0.10,
     ):
-        # self.targetAngs = target_angles
+        """initial robot position"""
 
-        """in meter """
+        # self.targetAngs = target_angles
+        """in meter"""
         self.Xdist = Xdist  # length of robot joints
         self.Ydist = Ydist
         self.height = height
@@ -97,9 +98,9 @@ class Quadruped:
         # self.bodytoBL4 = np.array([-self.Xdist / 2, self.Ydist / 2, -self.height])
 
     def solve(self, orn, pos, bodytoFeet):
-        """kinematics Model
+        """Solve inverse kinematics"""
 
-        Input body orientation, deviation and foot position and get the angles, neccesary to reach that position, for every joint"""
+        """Input body orientation, deviation and foot position and get the angles, neccesary to reach that position, for every joint"""
         bodytoFR4 = np.asarray([bodytoFeet[0, 0], bodytoFeet[0, 1], bodytoFeet[0, 2]])
         bodytoFL4 = np.asarray([bodytoFeet[1, 0], bodytoFeet[1, 1], bodytoFeet[1, 2]])
         bodytoBR4 = np.asarray([bodytoFeet[2, 0], bodytoFeet[2, 1], bodytoFeet[2, 2]])

@@ -8,6 +8,21 @@ Created on Wed Mar 11 16:38:15 2020
 import time
 import numpy as np
 
+# foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
+Xdist = 0.20
+Ydist = 0.15
+height = 0.15
+
+_B2F0 = np.matrix(
+    # body frame to foot frame vector
+    [
+        [Xdist / 2, -Ydist / 2, -height],
+        [Xdist / 2, Ydist / 2, -height],
+        [-Xdist / 2, -Ydist / 2, -height],
+        [-Xdist / 2, Ydist / 2, -height],
+    ]
+)
+
 
 def f(n, k):
     """calculates binomial factor (n k) to build a parametrized bezier curve"""
@@ -145,7 +160,7 @@ class trotGait:
 
         return coord
 
-    def loop(self, V, angle, Wrot, dT, offset, b2f):
+    def loop(self, V, angle, Wrot, dT, offset, b2f=_B2F0):
         """computes step trajectory for every foot
 
         b2f: local bodytoFeet (vs self.bodytoFeet)
