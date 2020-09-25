@@ -17,7 +17,7 @@
     <collision>
     <origin rpy="1.57 0 -1.57"/>
         <geometry>
-	  <mesh filename="STL_simulation/base_link.stl"/>
+	  <mesh filename="STL/base_link.stl"/>
         </geometry>
     </collision>
     <inertial>
@@ -30,7 +30,7 @@
     <visual>
       <origin rpy="1.57 0 -1.57"/>
       <geometry>
-        <mesh filename="STL_simulation/base_link.stl"/>
+        <mesh filename="STL/base_link.stl"/>
       </geometry>
       <material name="blue"/>
     </visual>
@@ -48,7 +48,7 @@
     <visual>
       <origin rpy="1.57 0 -1.57" xyz='0 0.04 0'/>
       <geometry>
-        <mesh filename="STL_simulation/coxa_fr.stl"/>
+        <mesh filename="STL/coxa_fr.stl"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -63,7 +63,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/femur_fr.stl"/>
+        <mesh filename="STL/femur_fr.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57" xyz="-0.095 0.04 0"/>
       <material name="white"/>
@@ -79,7 +79,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/tibia_fr.stl"/>
+        <mesh filename="STL/tibia_fr.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57"  xyz="-0.095 0.04 0.1"/>
       <material name="blue"/>
@@ -152,7 +152,7 @@
     <visual>
       <origin rpy="1.57 0 -1.57" xyz='0 -0.04 0'/>
       <geometry>
-        <mesh filename="STL_simulation/coxa_fl.stl"/>
+        <mesh filename="STL/coxa_fl.stl"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -167,7 +167,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/femur_fl.stl"/>
+        <mesh filename="STL/femur_fl.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57" xyz="-0.095 -0.04 0"/>
       <material name="white"/>
@@ -183,7 +183,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/tibia_fl.stl"/>
+        <mesh filename="STL/tibia_fl.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57"  xyz="-0.095 -0.04 0.1"/>
       <material name="blue"/>
@@ -262,7 +262,7 @@
     <visual>
       <origin rpy="1.57 0 -1.57" xyz='0 0.04 0'/>
       <geometry>
-        <mesh filename="STL_simulation/coxa_br.stl"/>
+        <mesh filename="STL/coxa_br.stl"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -277,7 +277,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/femur_br.stl"/>
+        <mesh filename="STL/femur_br.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57" xyz="0.095 0.04 0"/>
       <material name="white"/>
@@ -293,7 +293,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/tibia_br.stl"/>
+        <mesh filename="STL/tibia_br.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57"  xyz="0.095 0.04 0.1"/>
       <material name="blue"/>
@@ -366,7 +366,7 @@
     <visual>
       <origin rpy="1.57 0 -1.57" xyz='0 -0.04 0'/>
       <geometry>
-        <mesh filename="STL_simulation/coxa_bl.stl"/>
+        <mesh filename="STL/coxa_bl.stl"/>
       </geometry>
       <material name="red"/>
     </visual>
@@ -381,7 +381,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/femur_bl.stl"/>
+        <mesh filename="STL/femur_bl.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57" xyz="0.095 -0.04 0"/>
       <material name="white"/>
@@ -397,7 +397,7 @@
     </inertial>   
     <visual>
       <geometry>
-        <mesh filename="STL_simulation/tibia_bl.stl"/>
+        <mesh filename="STL/tibia_bl.stl"/>
       </geometry>
       <origin rpy="1.57 0 -1.57"  xyz="0.095 -0.04 0.1"/>
       <material name="blue"/>
