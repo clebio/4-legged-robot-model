@@ -43,7 +43,7 @@ class stabilize:
 
         return Upid_x, Upid_y, Upid_xorn, Upid_yorn
 
-    def bodyCompliant(self, Xacc, Yacc, compliantMode):
+    def bodyCompliant(self, Xacc, Yacc, compliantMode=True):
         if compliantMode == True:
             if Xacc >= 7000 or Yacc >= 7000:
                 self.collision = True
@@ -54,22 +54,24 @@ class stabilize:
                     self.Lci = 0.6
                 self.Lcompliant = np.linspace(self.Lci, 0.0, 100)
 
+            fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
+
             if self.collision == True:
                 self.Lci = self.Lcompliant[self.i]
                 if self.Lci >= 0.6:
                     self.Lci = 0.6
-                self.forceAngle = self.forceAngle
+
                 self.i += 1
                 if self.Lcompliant[self.i] <= 0.0:
                     self.collision = False
                     self.i = 0
                     self.forceAngle = 0.0
-            fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
+
         else:
             fmoduli = np.rad2deg(np.arctan2(Yacc, Xacc))
             self.forceAngle = 0.0
             self.Lci = 0.0
             self.i = 0
 
-        return fmoduli, self.forceAngle, self.Lci, self.collision
-
+        # return fmoduli, self.forceAngle, self.Lci, self.collision
+        return self.forceAngle, self.Lci

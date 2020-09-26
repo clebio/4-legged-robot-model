@@ -15,7 +15,7 @@ import numpy
 import logging
 import glob
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 
 def get_ACM(tty="/dev/ttyACM*"):
@@ -26,19 +26,19 @@ def get_ACM(tty="/dev/ttyACM*"):
     acms = glob.glob(tty)
     try:
         found = ArduinoSerial(acms.pop(), timeout=1)
-    except SerialException as e:
-        logger.error(f"Failed to connect to Arduino: {e}")
+    except serial.SerialException as e:
+        logging.error(f"Failed to connect to Arduino: {e}")
         raise e
     return found
 
 
 class ArduinoSerial:
     """Communicate with Arduino through serial
-    
+
     @miguel-asd: clase para la comunicacion con arduino mediante serial, se inicia diciendo puerto y velocidad y en la funcion crea un string con el formato para la lectura. en la primera ejecucion hay que abrir el puerto.
     """
 
-    def __init__(self, port, timeout=1, interval=1):
+    def __init__(self, port, timeout=20, interval=1):
         self.arduino = serial.Serial(port, 115200, timeout=timeout)
         self.arduino.flush()
         self.arduino.setDTR(True)
@@ -53,26 +53,17 @@ class ArduinoSerial:
 
     def receive(self):
         try:
-            line = self.arduino.readline()
+            # record = self.arduino.readline()
+            # lines = record.decode("utf-8").strip()
+            # self.arduino.flush()
+            record = self.arduino.read(self.arduino.in_waiting or 1)
+            record = record.decode("utf-8")
+            lines = [l.strip("\n\r") for l in record.split("\n")]
+            return lines
         except ValueError as e:
             print(f"Failed to read: {e}")
             results = False
-
-        deline = line.decode("utf-8").rstrip()
-        if not deline.startswith("<") and not deline.endswith(">"):
-            logging.warning(f"Didn't find control markers: {deline}")
-            return [0 for _ in range(6)]
-
-        if not deline.startswith("DATA"):
-            logging.warning(f"Didn't receive a data record: {deline}")
-            return [0 for _ in range(6)]
-
-        deline = deline.strip("<>").split("#")
-        logging.info(deline)
-        results = numpy.array(deline)
-
-        self.arduino.flush()
-        return results  # loopTime, battery, Xacc, Yacc, roll, pitch
+            return []
 
     def close(self):
         self.arduino.close()

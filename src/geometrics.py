@@ -12,7 +12,7 @@ Updates on September, 2020
 import numpy as np
 
 
-def Rx(roll):
+def Rx(roll: float) -> np.matrix:
     """Rotation matrix arround x (roll)"""
     #    roll = np.radians(roll)
     return np.matrix(
@@ -25,7 +25,7 @@ def Rx(roll):
     )
 
 
-def Ry(pitch):
+def Ry(pitch: float) -> np.matrix:
     """Rotation matrix arround y (pitch)"""
     #    pitch = np.radians(pitch)
     return np.matrix(
@@ -38,7 +38,7 @@ def Ry(pitch):
     )
 
 
-def Rz(yaw):
+def Rz(yaw: float) -> np.matrix:
     """Rotation matrix arround z (yaw)"""
     #    yaw = np.radians(yaw)
     return np.matrix(
@@ -51,14 +51,14 @@ def Rz(yaw):
     )
 
 
-def Rxyz(roll, pitch, yaw):
+def Rxyz(roll: float, pitch: float, yaw: float) -> np.matrix:
     if not all([roll, pitch, yaw]):
         return np.identity(4)
 
     return Rx(roll) * Ry(pitch) * Rz(yaw)
 
 
-def RTmatrix(orientation, position):
+def RTmatrix(orientation: np.ndarray, position: np.ndarray) -> np.matrix:
     """compose translation and rotation"""
     roll, pitch, yaw = orientation
     x0, y0, z0 = position

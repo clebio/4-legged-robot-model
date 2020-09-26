@@ -4,41 +4,84 @@
 Created on Mon Mar  2 22:15:21 2020
 
 @author: linux-asd
+
+@author: Caleb Hyde
+@date: September, 2020
 """
-import pybullet as p
+import pybullet as pb
 import time
 import numpy as np
 import sys
+from typing import Tuple
+import pybullet_data
+
+
+def networking():
+    """If you want to run pybullet server on another computer
+
+    A beefy gaming rig, for instance.
+    https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstart_guide/PyBulletQuickstartGuide.md.html#connect-using-direct-gui
+
+    This method is just TODO code, not useful right now.
+    """
+    pybullet.connect(pybullet.DIRECT)
+    pybullet.connect(pybullet.GUI, options="--opengl2")
+    pybullet.connect(pybullet.SHARED_MEMORY, 1234)
+    pybullet.connect(pybullet.UDP, "192.168.0.1")
+    pybullet.connect(pybullet.UDP, "localhost", 1234)
+    pybullet.connect(pybullet.TCP, "localhost", 6667)
+
+
+def setup_pybullet():
+    physicsClient = pb.connect(pb.GUI)  # or pb.DIRECT for non-graphical version
+    pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
+    pb.setGravity(0, 0, -9.8)
+    pb.loadURDF("plane.urdf")
+    cubeStartPos = [0, 0, 0.2]
+    pb.setRealTimeSimulation(1)
+    return pb.loadURDF("4leggedRobot.urdf", cubeStartPos)
 
 
 class pybulletDebug:
-    def __init__(self):
+    def __init__(self, baseObject):
         # Camera paramers to be able to yaw pitch and zoom the camera (Focus remains on the robot)
+        self.base = baseObject
         self.cyaw = 90
         self.cpitch = -7
         self.cdist = 0.66
 
-        self.xId = p.addUserDebugParameter("x", -0.10, 0.10, 0.0)
-        self.yId = p.addUserDebugParameter("y", -0.10, 0.10, 0.0)
-        self.zId = p.addUserDebugParameter("z", -0.10, 0.10, 0.0)
-        self.rollId = p.addUserDebugParameter("roll", -np.pi / 4, np.pi / 4, 0.0)
-        self.pitchId = p.addUserDebugParameter("pitch", -np.pi / 4, np.pi / 4, 0.0)
-        self.yawId = p.addUserDebugParameter("yaw", -np.pi / 4, np.pi / 4, 0.0)
-        self.LId = p.addUserDebugParameter("L", -0.5, 1.5, 0.0)
-        self.LrotId = p.addUserDebugParameter("Lrot", -1.5, 1.5, 0.0)
-        self.angleId = p.addUserDebugParameter("angleWalk", -180.0, 180.0, 0.0)
-        self.periodId = p.addUserDebugParameter("stepPeriod", 0.1, 3.0, 0.78)
+        self.xId = pb.addUserDebugParameter("x", -0.10, 0.10, 0.0)
+        self.yId = pb.addUserDebugParameter("y", -0.10, 0.10, 0.0)
+        self.zId = pb.addUserDebugParameter("z", -0.10, 0.10, 0.0)
+        self.rollId = pb.addUserDebugParameter("roll", -np.pi / 4, np.pi / 4, 0.0)
+        self.pitchId = pb.addUserDebugParameter("pitch", -np.pi / 4, np.pi / 4, 0.0)
+        self.yawId = pb.addUserDebugParameter("yaw", -np.pi / 4, np.pi / 4, 0.0)
+        self.LId = pb.addUserDebugParameter("L", -0.5, 1.5, 0.0)
+        self.LrotId = pb.addUserDebugParameter("Lrot", -1.5, 1.5, 0.0)
+        self.angleId = pb.addUserDebugParameter("angleWalk", -180.0, 180.0, 0.0)
+        self.periodId = pb.addUserDebugParameter("stepPeriod", 0.1, 3.0, 0.78)
 
-    def cam_and_robotstates(self, boxId):
-        ####orientacion de la camara
-        cubePos, cubeOrn = p.getBasePositionAndOrientation(boxId)
-        p.resetDebugVisualizerCamera(
+    def update(
+        self, boxId
+    ) -> Tuple[np.ndarray, np.ndarray, float, float, float, float]:
+        """Update pybullet simulation
+
+        Returns:
+            position
+            orientation
+            stride length
+            angle
+            stride rotation
+            step period
+        """
+        cubePos, cubeOrn = pb.getBasePositionAndOrientation(boxId)
+        pb.resetDebugVisualizerCamera(
             cameraDistance=self.cdist,
             cameraYaw=self.cyaw,
             cameraPitch=self.cpitch,
             cameraTargetPosition=cubePos,
         )
-        keys = p.getKeyboardEvents()
+        keys = pb.getKeyboardEvents()
         # Keys to change camera
         if keys.get(100):  # D
             self.cyaw += 1
@@ -52,27 +95,35 @@ class pybulletDebug:
             self.cdist += 0.01
         if keys.get(120):  # X
             self.cdist -= 0.01
+
         if keys.get(27):  # ESC
-            p.disconnect()
+            pb.disconnect()
             sys.exit()
-        # read position from debug
+
         pos = np.array(
             [
-                p.readUserDebugParameter(self.xId),
-                p.readUserDebugParameter(self.yId),
-                p.readUserDebugParameter(self.zId),
+                pb.readUserDebugParameter(self.xId),
+                pb.readUserDebugParameter(self.yId),
+                pb.readUserDebugParameter(self.zId),
             ]
         )
         orn = np.array(
             [
-                p.readUserDebugParameter(self.rollId),
-                p.readUserDebugParameter(self.pitchId),
-                p.readUserDebugParameter(self.yawId),
+                pb.readUserDebugParameter(self.rollId),
+                pb.readUserDebugParameter(self.pitchId),
+                pb.readUserDebugParameter(self.yawId),
             ]
         )
-        L = p.readUserDebugParameter(self.LId)
-        Lrot = p.readUserDebugParameter(self.LrotId)
-        angle = p.readUserDebugParameter(self.angleId)
-        T = p.readUserDebugParameter(self.periodId)
+        velocity = pb.readUserDebugParameter(self.LId)
+        rotation = pb.readUserDebugParameter(self.LrotId)
+        angle = pb.readUserDebugParameter(self.angleId)
+        period = pb.readUserDebugParameter(self.periodId)
 
-        return pos, orn, L, angle, Lrot, T
+        # TODO: doesn't work
+        # if keys.get(114):  # R (reset)
+        #     # pb.resetBaseVelocity(self.base, np.zeros(3), np.zeros(4))
+        #     pb.resetBasePositionAndOrientation(
+        #         self.base, [0, 0, 0.2], np.array([*orn, 0.0])
+        #     )
+
+        return pos, orn, velocity, angle, rotation, period

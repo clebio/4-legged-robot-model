@@ -42,8 +42,11 @@ def checkdomain(D):
 "    | /                 "
 "    |/____________  x       "
 """
-# IK equations now written in pybullet frame.
+
+
 def _solve(coordinates, coxa, femur, tibia, orientation=1):
+    """IK equations now written in pybullet frame"""
+
     x0, x1, x2 = coordinates
     _c1c2 = np.sqrt(x1 ** 2 + (-x2) ** 2 - coxa ** 2)
 
@@ -97,10 +100,10 @@ class Quadruped:
         # self.bodytoBR4 = np.array([-self.Xdist / 2, -self.Ydist / 2, -self.height])
         # self.bodytoBL4 = np.array([-self.Xdist / 2, self.Ydist / 2, -self.height])
 
-    def solve(self, orn, pos, bodytoFeet):
-        """Solve inverse kinematics"""
+    def solve(self, orn: np.ndarray, pos: np.ndarray, bodytoFeet: np.array):
+        """Solve inverse kinematics
 
-        """Input body orientation, deviation and foot position and get the angles, neccesary to reach that position, for every joint"""
+        Input body orientation, deviation and foot position and get the angles neccesary to reach that position, for every joint"""
         bodytoFR4 = np.asarray([bodytoFeet[0, 0], bodytoFeet[0, 1], bodytoFeet[0, 2]])
         bodytoFL4 = np.asarray([bodytoFeet[1, 0], bodytoFeet[1, 1], bodytoFeet[1, 2]])
         bodytoBR4 = np.asarray([bodytoFeet[2, 0], bodytoFeet[2, 1], bodytoFeet[2, 2]])
@@ -133,4 +136,11 @@ class Quadruped:
         _bodytofeetFL = _bodytoFL0 + _FLcoord
         _bodytofeetBR = _bodytoBR0 + _BRcoord
         _bodytofeetBL = _bodytoBL0 + _BLcoord
-        return FR_angles, FL_angles, BR_angles, BL_angles
+
+        pose = np.array([FR_angles, FL_angles, BR_angles, BL_angles])
+        # _bodytofeet = np.array(
+        #     [_bodytofeetFR, _bodytofeetFL, _bodytofeetBR, _bodytofeetBL]
+        # )
+
+        # return FR_angles, FL_angles, BR_angles, BL_angles, _bodytofeet
+        return pose

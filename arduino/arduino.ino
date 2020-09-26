@@ -5,15 +5,14 @@
 #include <utility/imumaths.h>
 
 #define ENABLE_RELAY 1
-#define ENABLE_IMU 0
+#define ENABLE_IMU 1
 #define ENABLE_SERVO 0
 #define NUM_SERVOS 12
 const int RELAY_PIN = A0;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
 unsigned long loopTime = millis();
-unsigned long previousMillis = 0;
-const long interval = 200;
+const long interval = 20;
 const String startMarker = "<";
 const String endMarker = ">";
 
@@ -105,7 +104,9 @@ String readIMU()
     char fqw[width + precision + 1];
     dtostrf(qw, width, precision, fqw);
 
-    sprintf(response, "BNO055#%s %s %s %s %s %s", fex, fey, fez, fax, fay, faz); // fqx, fqy, fqz, fqw);
+    sprintf(response, "BNO055#%s %s %s %s %s %s", fex, fey, fez, fax, fay, faz);
+    // sprintf(response, "BNO055#%s %s %s %s %s %s %s", fex, fey, fez, fqx, fqy, fqz, fqw);
+    // sprintf(response, "BNO055#%s %s %s %s %s %s %s", fax, fay, faz, fqx, fqy, fqz, fqw);
     return response;
 }
 
@@ -271,6 +272,15 @@ void loop()
             {
                 Serial.println(readIMU());
             }
+        }
+    }
+
+    if (millis()-loopTime  > interval)
+    {
+        loopTime = millis();
+        if (ENABLE_IMU)
+        {
+            Serial.println(readIMU());
         }
     }
 }
