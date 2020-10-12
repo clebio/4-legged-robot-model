@@ -14,23 +14,27 @@ from collections import namedtuple
 
 def limit(angles):
     """Limit servo angles to safe ranges
-    
+
     Supports specific angle limits for a list of 12 servos
     """
     a = namedtuple("servo_limits", ["min", "max"])
     lims = {
-        0: a(-180, 180),
-        1: a(-180, 180),
-        2: a(-180, 180),
-        3: a(-180, 180),
-        4: a(-180, 180),
-        5: a(-180, 180),
-        6: a(-180, 180),
-        7: a(-180, 180),
-        8: a(-180, 180),
-        9: a(-180, 180),
-        10: a(-180, 180),
-        11: a(-180, 180),
+        # Left Front
+        0: a(60, 110),
+        1: a(28, 110),
+        2: a(60, 130),
+        # Left Back
+        3: a(42, 100),
+        4: a(40, 180),
+        5: a(35, 112),
+        # Right front
+        6: a(72, 120),
+        7: a(34, 148),
+        8: a(65, 120),
+        # Right back
+        9: a(58, 125),
+        10: a(20, 165),
+        11: a(55, 125),
     }
     if len(angles) > 12:
         raise KeyError("We only support 12 servos")
