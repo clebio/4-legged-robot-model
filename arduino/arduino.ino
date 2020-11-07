@@ -6,13 +6,14 @@
 
 #define ENABLE_RELAY 1
 #define ENABLE_IMU 1
-#define ENABLE_SERVO 0
+#define ENABLE_SERVO 1
 #define NUM_SERVOS 12
+#define SERVO_FIRST_PIN 53
 const int RELAY_PIN = A0;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
 unsigned long loopTime = millis();
-const long interval = 20;
+const long interval = 200;
 const String startMarker = "<";
 const String endMarker = ">";
 
@@ -74,6 +75,7 @@ String readIMU()
     int width = 4;
     int precision = 2;
 
+    // TODO: Couldn't figure out how to make a method for this
     char fex[width + precision + 1];
     dtostrf(ex, width, precision, fex);
 
@@ -130,37 +132,13 @@ String relayctl(String message)
     }
     if (message == "on" || message == "#on")
     {
-        _RELAYED = HIGH;
+        digitalWrite(RELAY_PIN, HIGH);
     }
-    digitalWrite(RELAY_PIN, _RELAYED);
+    else
+    {
+        digitalWrite(RELAY_PIN, LOW);
+    }
     return String(_RELAYED);
-}
-
-void setup()
-{
-    if (ENABLE_IMU)
-    {
-        setup_imu();
-    }
-    if (ENABLE_RELAY)
-    {
-        pinMode(RELAY_PIN, OUTPUT);
-    }
-
-    Serial.begin(115200);
-    while (!Serial)
-    {
-        delay(interval);
-    }
-    {
-        if (ENABLE_SERVO)
-        {
-            for (i = 0; i < NUM_SERVOS; i++)
-            {
-                Servos[i].attach(2 + i);
-            }
-        }
-    }
 }
 
 String shutdown()
@@ -253,6 +231,89 @@ String dispatch(String data)
     return response;
 }
 
+void sit()
+{
+    int positions[NUM_SERVOS] = {
+        // FL
+        90, 110, 120,
+        // BL
+        90, 160, 110,
+        // FR
+        90, 60, 80,
+        // BR
+        90, 45, 70};
+
+    // int angles[] = {80, 100, 90};
+    for (i = 0; i < NUM_SERVOS; i++)
+    {
+        Servos[i].write(positions[i]);
+    }
+    delay(interval);
+}
+
+void setup()
+{
+    if (ENABLE_IMU)
+    {
+        setup_imu();
+    }
+    if (ENABLE_RELAY)
+    {
+        pinMode(RELAY_PIN, OUTPUT);
+        relayctl("on");
+    }
+
+    Serial.begin(115200);
+    while (!Serial)
+    {
+        delay(interval);
+    }
+
+    // if (ENABLE_SERVO)
+    // {
+    //     for (i = 0; i < NUM_SERVOS; i++)
+    //     {
+    //         Servos[i].attach(SERVO_FIRST_PIN + i);
+    //     }
+    // }
+
+    if (ENABLE_SERVO)
+    {
+        // TODO: do we need to cast NUM_SERVOS / 2 to integer, on Arduino?
+        // In [3]: [53-2*i for i in range(int(NUM_SERVOS/2))]
+        // Out[3]: [53, 51, 49, 47, 45, 43]
+
+        // In [8]: [52-2*i for i in range(int(NUM_SERVOS/2))]
+        // Out[8]: [52, 50, 48, 46, 44, 42]
+
+        // Outer row, short edge
+        // for (i = 0; i < NUM_SERVOS; i++)
+        // {
+        //     // starting at pin 53, count down by two
+        //     // to match the outer row digital pins on the short edge of the Mega
+        //     Servos[i].attach(31 + 2 * i);
+        // }
+
+        // // outer and inner row, short edge, six pins on each (half of NUM_SERVOS)
+        for (i = 0; i < (int)(NUM_SERVOS / 2); i++)
+        {
+            // starting at pin 53, count down by two
+            // (outer row digital pins on the short edge of the Mega)
+            Servos[i].attach(53 - 2 * i);
+        }
+        int j = i - (int)(NUM_SERVOS / 2);
+        for (i = (int)(NUM_SERVOS / 2); i < NUM_SERVOS; i++)
+        {
+            j = i - (int)(NUM_SERVOS / 2);
+            // starting at pin 52, count down by two
+            // (inner row digital pins on the short edge of the Mega)
+            Servos[i].attach(52 - 2 * j);
+        }
+
+        sit();
+    }
+}
+
 void loop()
 {
     if (Serial.available() > 0)
@@ -268,19 +329,15 @@ void loop()
             {
                 Serial.println(response);
             }
+        }
+
+        if (millis() - loopTime > interval)
+        {
+            loopTime = millis();
             if (ENABLE_IMU)
             {
                 Serial.println(readIMU());
             }
-        }
-    }
-
-    if (millis()-loopTime  > interval)
-    {
-        loopTime = millis();
-        if (ENABLE_IMU)
-        {
-            Serial.println(readIMU());
         }
     }
 }

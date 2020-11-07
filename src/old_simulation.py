@@ -13,9 +13,9 @@ import pybullet as pb
 import numpy as np
 import pybullet_data
 
-from src.pybullet_debugger import pybulletDebug
-from src.kinematics import Quadruped
-from src.gaitPlanner import trotGait
+from pybullet_debugger import pybulletDebug
+from kinematics import Quadruped
+from gaitPlanner import trotGait
 
 INTERVAL = 0.05
 
@@ -59,7 +59,7 @@ async def run():
     footBR_index = 11
     footBL_index = 15
 
-    instance = pybulletDebug()
+    instance = pybulletDebug(boxId)
     robotKinematics = Quadruped()
 
     # foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
@@ -109,3 +109,9 @@ async def run():
         await asyncio.sleep(INTERVAL)
 
     pb.disconnect()
+
+
+if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    asyncio.run(run())

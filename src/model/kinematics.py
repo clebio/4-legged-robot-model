@@ -11,7 +11,7 @@ https://hackaday.io/project/171456-diy-hobby-servos-quadruped-robot/log/177488-l
 @author: miguel-asd
 """
 import numpy as np
-from src import geometrics as geo
+from src.model import geometrics as geo
 import logging
 
 
@@ -103,7 +103,14 @@ class Quadruped:
     def solve(self, orn: np.ndarray, pos: np.ndarray, bodytoFeet: np.array):
         """Solve inverse kinematics
 
-        Input body orientation, deviation and foot position and get the angles neccesary to reach that position, for every joint"""
+        Inputs:
+            orientation: radian angles of body pose
+            position:
+            bodyToFeet: body-to-foot position
+
+        Returns:
+            angles neccesary to reach that position, for every joint
+        """
         bodytoFR4 = np.asarray([bodytoFeet[0, 0], bodytoFeet[0, 1], bodytoFeet[0, 2]])
         bodytoFL4 = np.asarray([bodytoFeet[1, 0], bodytoFeet[1, 1], bodytoFeet[1, 2]])
         bodytoBR4 = np.asarray([bodytoFeet[2, 0], bodytoFeet[2, 1], bodytoFeet[2, 2]])

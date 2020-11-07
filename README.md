@@ -35,10 +35,20 @@ All the info at [Hackaday project][hackaday]
 
 
 Here is a simple diagram of how the robot is working:
-![alt text](https://github.com/miguelasd688/4-legged-robot-model/blob/master/esquema.jpg)
+![Outline schematic](images/esquema.jpg)
 
 
 # New Material
+
+
+## Raspberry Pi setup
+
+### Connecting Raspberry Pi and Arduino over UART
+
+Disable or move Bluetooth to UART 1 (https://pinout.xyz/pinout/pin8_gpio14#)
+
+    dtoverlay=miniuart-bt
+
 
 ## Debugging Joystick
 
@@ -68,7 +78,20 @@ sudo apt-get install arduino-mk arduino-core arduino -y
 
 ### Arduino CLI on Raspberry Pi
 
+* [Arduino CLI][arduino-cli]
+* [Arduino Make][arduino-make]
+
+Setup:
+
+    sudo apt-get install build-essentials arduino arduino-core arduino-mk
     curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+    arduino-cli core install arduino:avr
+
+[arduino-cli]: https://arduino.github.io/arduino-cli/latest/
+[arduino-make]: https://github.com/sudar/Arduino-Makefile
+[teensyduino]: https://www.pjrc.com/teensy/teensyduino.html
+
+> `BOARD_TAG` - Type of board, for a list see boards.txt or `make show_boards`
 
 ### Validate
 

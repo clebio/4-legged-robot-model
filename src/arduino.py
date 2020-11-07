@@ -24,11 +24,13 @@ def get_ACM(tty="/dev/ttyACM*"):
     # ls -l /dev | grep ACM to identify serial port of the arduino
     """
     acms = glob.glob(tty)
+    if not acms:
+        return False
     try:
         found = ArduinoSerial(acms.pop(), timeout=1)
     except serial.SerialException as e:
         logging.error(f"Failed to connect to Arduino: {e}")
-        raise e
+        return False
     return found
 
 
@@ -51,19 +53,26 @@ class ArduinoSerial:
         x = self.arduino.read()
         logging.info(ord(x))
 
+    def clear(self):
+        if self.arduino.in_waiting > 0:
+            logging.debug(self.receive())
+
     def receive(self):
+        lines = []
         try:
-            # record = self.arduino.readline()
-            # lines = record.decode("utf-8").strip()
-            # self.arduino.flush()
-            record = self.arduino.read(self.arduino.in_waiting or 1)
-            record = record.decode("utf-8")
-            lines = [l.strip("\n\r") for l in record.split("\n")]
-            return lines
+            while self.arduino.inWaiting():
+                record = self.arduino.readline()
+                # lines = record.decode("utf-8").strip()
+                # self.arduino.flush()
+                # record = self.arduino.read(self.arduino.in_waiting or 1)
+                record = record.decode("utf-8")
+                lines.extend(l.strip("\n\r") for l in record.split("\n"))
+
         except ValueError as e:
             print(f"Failed to read: {e}")
             results = False
             return []
+        return lines
 
     def close(self):
         self.arduino.close()

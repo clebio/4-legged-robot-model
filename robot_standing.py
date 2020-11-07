@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Mar 15 20:31:07 2020
+Standing robot using IMU for stabilization
+No joystick input, no walking
 
-@author: miguel-asd
+@author: Caleb Hyde
+@date: September, 2020
 """
 
 import numpy as np
@@ -13,10 +15,7 @@ import logging
 from os import environ
 
 from src.model.kinematics import Quadruped
-from src.joystick import Joystick, setup_joystick
-from src.arduino import ArduinoSerial, get_ACM
 from src.model import servo
-from src.model.gaitPlanner import trotGait
 from src.model.stabilization import stabilize
 
 logger = logging.getLogger(__name__)
@@ -28,16 +27,13 @@ logger.setLevel(logging.INFO)
 # Ydist = 0.18
 # Xdist = 0.25
 robot = Quadruped()
-JOYSTICK = False if environ.get("NO_JOY") else True
-if JOYSTICK:
-    joystick = setup_joystick()
 
 ARDUINO = False if environ.get("NO_ARDUINO") else True
 if ARDUINO:
+    from src.arduino import ArduinoSerial, get_ACM
     arduino = get_ACM()
 else:
     logging.info("Skipping Arduino setup!")
-trot = trotGait()
 control = stabilize()
 
 # period of time (in seconds) of every step
@@ -53,14 +49,35 @@ if LOG_TELEMETRY:
     csv_writer = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
     csv_writer.writeheader()
 
+shutdown = False
+
+# foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
+Xdist = 0.20
+Ydist = 0.15
+height = 0.15
+B2F0 = np.matrix(
+    # body frame to foot frame vector
+    [
+        [Xdist / 2, -Ydist / 2, -height],
+        [Xdist / 2, Ydist / 2, -height],
+        [-Xdist / 2, -Ydist / 2, -height],
+        [-Xdist / 2, Ydist / 2, -height],
+    ]
+)
+
+rotation = 0.0
+dT = 0.4
+commandPose = np.zeros(3)
+commandOrn = np.zeros(3)
+compliantMode = True
+
 while True:
     now = time.time()
     if now - loopTime < interval:
         continue
     loopTime = now
 
-    commandPose, commandOrn, Vel, angle, Wrot, dT, compliantMode = joystick.read() if JOYSTICK else 0, 0, 0, 0, 0, 0, 0
-    if commandPose == "Shutdown!":
+    if shutdown:
         logger.info("Shutting down")
         if ARDUINO:
             arduino.send("<QUIT>")
@@ -70,8 +87,18 @@ while True:
 
     arduino_response = [0 for _ in range(6)]
     if ARDUINO:
-        arduino_response = arduino.receive()
-        arduinoLoopTime, battery, Xacc, Yacc, realRoll, realPitch = arduino_response
+        response = arduino.receive()
+        if "BNO055" in response:
+            try:
+                header, message = response.strip("<>").split("#")
+                x, y, z, ax, ay, az, aw = message.split(" ")
+                logging.info(
+                    f"Received {header}: {x}, {y}, {z}, {ax}, {ay}, {az}, {aw}"
+                )
+                Xacc, Yacc, realRoll, realPitch = x, y, ax, ay
+            except:
+                logging.warning(f"Failed to parse arduino: [{response}]")
+                Xacc, Yacc, realRoll, realPitch = 0, 0, 0, 0
     else:
         arduinoLoopTime = loopTime
         battery = 0
@@ -81,31 +108,23 @@ while True:
         realPitch = 0
 
     forceAngle, Vcompliant = control.bodyCompliant(Xacc, Yacc, compliantMode)
-    bodytoFeet = trot.loop(Vel + Vcompliant, angle + forceAngle, Wrot, dT)
 
-    logger.debug(f"Solving for {commandOrn}, {commandPose}, {bodytoFeet}")
-    pose = robot.solve(commandOrn, commandPose, bodytoFeet)
+    logger.debug(f"Solving for {commandOrn}, {commandPose}, {B2F0}")
+    pose = robot.solve(commandOrn, commandPose, B2F0)
 
     angles = [np.rad2deg(p) for p in pose.flatten()]
     logger.debug(angles)
     # pulses = servo.convert(pulses)
 
-    limited_angles = servo.limit(angles)
+    angles = servo.limit(angles)
     message = "<SERVO#{}>\n".format(
-        "#".join(f"{i}~{str(c)}" for i, c in enumerate(limited_angles))
+        "#".join(f"{i}~{str(c)}" for i, c in enumerate(angles))
     )
 
-    log_message = " ".join("{: 3.2f}".format(round(c, 2)) for c in limited_angles)
+    log_message = " ".join("{: 3.2f}".format(round(c, 2)) for c in angles)
     logger.info(f"Commands: {log_message}")
     if ARDUINO:
         arduino.send(message)
-
-    # Upid_x , Upid_y , errorX , errorY , Upid_xorn , Upid_yorn = control.centerPoint(realPitch , realRoll)
-    # orn[0] = Upid_xorn
-    # orn[1] = Upid_yorn
-    # pos[0] = Upid_x
-    # pos[1] = Upid_y
-    logger.debug(f"{loopTime}, {arduinoLoopTime}, {realRoll}, {realPitch}")
 
     if LOG_TELEMETRY:
         csv_writer.writerow(

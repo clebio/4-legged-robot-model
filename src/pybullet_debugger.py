@@ -17,7 +17,7 @@ import pybullet_data
 
 
 def networking():
-    """If you want to run pybullet server on another computer
+    """Run pybullet server on another computer
 
     A beefy gaming rig, for instance.
     https://github.com/bulletphysics/bullet3/blob/master/docs/pybullet_quickstart_guide/PyBulletQuickstartGuide.md.html#connect-using-direct-gui
@@ -32,14 +32,16 @@ def networking():
     pybullet.connect(pybullet.TCP, "localhost", 6667)
 
 
-def setup_pybullet():
-    physicsClient = pb.connect(pb.GUI)  # or pb.DIRECT for non-graphical version
-    pb.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
+def setup_pybullet(model="4leggedRobot.urdf", realtime=1, grounded=True):
+    pb.connect(pb.GUI)
+    pb.setAdditionalSearchPath(pybullet_data.getDataPath())
     pb.setGravity(0, 0, -9.8)
-    pb.loadURDF("plane.urdf")
-    cubeStartPos = [0, 0, 0.2]
-    pb.setRealTimeSimulation(1)
-    return pb.loadURDF("4leggedRobot.urdf", cubeStartPos)
+    pb.setRealTimeSimulation(realtime)
+    robot = pb.loadURDF(model, basePosition=[0, 0, 0.2])
+    if grounded:
+        ground = pb.loadURDF("plane.urdf")
+        return ground, robot
+    return robot
 
 
 class pybulletDebug:

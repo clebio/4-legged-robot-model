@@ -43,35 +43,33 @@ class stabilize:
 
         return Upid_x, Upid_y, Upid_xorn, Upid_yorn
 
-    def bodyCompliant(self, Xacc, Yacc, compliantMode=True):
-        if compliantMode == True:
-            if Xacc >= 7000 or Yacc >= 7000:
-                self.collision = True
-                self.forceAngle = np.rad2deg(np.arctan2(Yacc, Xacc))
-                fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
-                self.Lci = fmoduli / 1000
-                if self.Lci >= 0.6:
-                    self.Lci = 0.6
-                self.Lcompliant = np.linspace(self.Lci, 0.0, 100)
-
-            fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
-
-            if self.collision == True:
-                self.Lci = self.Lcompliant[self.i]
-                if self.Lci >= 0.6:
-                    self.Lci = 0.6
-
-                self.i += 1
-                if self.Lcompliant[self.i] <= 0.0:
-                    self.collision = False
-                    self.i = 0
-                    self.forceAngle = 0.0
-
-        else:
-            fmoduli = np.rad2deg(np.arctan2(Yacc, Xacc))
+    def bodyCompliant(self, Xacc, Yacc, compliant=True):
+        if not compliant:
             self.forceAngle = 0.0
             self.Lci = 0.0
             self.i = 0
+            return self.forceAngle, self.Lci
+        
+        if Xacc >= 7000 or Yacc >= 7000:
+            self.collision = True
+            self.forceAngle = np.rad2deg(np.arctan2(Yacc, Xacc))
+            fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
+            self.Lci = fmoduli / 1000
+            if self.Lci >= 0.6:
+                self.Lci = 0.6
+            self.Lcompliant = np.linspace(self.Lci, 0.0, 100)
 
-        # return fmoduli, self.forceAngle, self.Lci, self.collision
+        fmoduli = np.sqrt(Xacc ** 2 + Yacc ** 2)
+
+        if self.collision == True:
+            self.Lci = self.Lcompliant[self.i]
+            if self.Lci >= 0.6:
+                self.Lci = 0.6
+
+            self.i += 1
+            if self.Lcompliant[self.i] <= 0.0:
+                self.collision = False
+                self.i = 0
+                self.forceAngle = 0.0
+
         return self.forceAngle, self.Lci

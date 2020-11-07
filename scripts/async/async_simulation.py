@@ -102,7 +102,7 @@ if __name__ == "__main__":
     footBR_index = 11
     footBL_index = 15
 
-    instance = pybulletDebug()
+    instance = pybulletDebug(boxId)
     robotKinematics = Quadruped()
     trot = trotGait()
 

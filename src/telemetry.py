@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 plt.style.use('dark_background')
-
 index = count()
 
 
@@ -40,7 +39,6 @@ def animate(i):
     
 
 ani1 = FuncAnimation(plt.gcf(), animate, interval=25)
-
 plt.tight_layout()
 plt.show()
 

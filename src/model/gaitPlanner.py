@@ -8,20 +8,12 @@ Created on Wed Mar 11 16:38:15 2020
 import time
 import numpy as np
 
-# foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
-Xdist = 0.20
-Ydist = 0.15
-height = 0.15
-
-_B2F0 = np.matrix(
-    # body frame to foot frame vector
-    [
-        [Xdist / 2, -Ydist / 2, -height],
-        [Xdist / 2, Ydist / 2, -height],
-        [-Xdist / 2, -Ydist / 2, -height],
-        [-Xdist / 2, Ydist / 2, -height],
-    ]
-)
+# defines the offset between each foot step in this order (FR,FL,BR,BL)
+# offset between each foot step in this order (FR,FL,BR,BL)
+_trot = np.array([0.5, 0.0, 0.0, 0.5])
+_creep = np.array([0.0, 0.25, 0.75, 0.5])
+_trot_rev = np.array([0.0, 0.5, 0.5, 0.0])
+_stance = _trot
 
 
 def f(n, k):
@@ -70,19 +62,30 @@ class trotGait:
     def calculateBezier_swing(self, phi_sw, V, angle):
         """phi between [0,1), angle in degrees
 
-        # curve generator https://www.desmos.com/calculator/xlpbe9bgll
+        Inputs:
+            phi_sw
+            V: velocity ("multiply all points by a velocity to make the trajectory wider")
+            angle
+
+        returns:
+            swingX
+            swingY
+            swingZ
+        https://hackaday.io/project/171456-diy-hobby-servos-quadruped-robot/log/178481-step-trajectory-and-gait-planner-from-mit-cheetah
+
+        curve generator https://www.desmos.com/calculator/xlpbe9bgll
         """
 
         # cylindrical coordinates
         c = np.cos(np.deg2rad(angle))
         s = np.sin(np.deg2rad(angle))
-        #        if (phi >= 0.75 or phi < 0.25):
-        #            self.s = True
-        ##            print('foot DOWN' , self.s , phi)
-        #
-        #        elif (phi <= 0.75 and phi > 0.25):
-        #            self.s = False
-        ##            print('foot UP', self.s , phi)
+        # if (phi >= 0.75 or phi < 0.25):
+        #     self.s = True
+        #     print('foot DOWN' , self.s , phi)
+
+        # elif (phi <= 0.75 and phi > 0.25):
+        #     self.s = False
+        #     print('foot UP', self.s , phi)
 
         what_the_x = [-0.05, -0.06, -0.07, -0.07, 0.0, 0.0, 0.07, 0.07, 0.06, 0.05]
         what_the_y = [0.05, 0.06, 0.07, 0.07, 0.0, -0.0, -0.07, -0.07, -0.06, -0.05]
@@ -104,7 +107,7 @@ class trotGait:
 
         return swingX, swingY, swingZ
 
-    def stepTrajectory(self, phi, V, angle, Wrot, centerToFoot):
+    def stepTrajectory(self, phi, V, angle, Wrot, centerToFoot) -> np.ndarray:
         """phi belong [0,1), angles in degrees
 
         returns coord: np.array(3)
@@ -160,12 +163,15 @@ class trotGait:
 
         return coord
 
-    def loop(self, V, angle, Wrot, dT, offset, b2f=_B2F0):
+    def loop(self, V, angle, Wrot, dT, offset: np.ndarray, b2f: np.matrix) -> np.matrix:
         """computes step trajectory for every foot
 
-        b2f: local bodytoFeet (vs self.bodytoFeet)
+        b2f: local bodytoFeet (4x3 np.matrix)
 
         Defining length of the step and direction (0º -> forward; 180º -> backward), L which is like velocity command, its angle, period of time of each step, offset between each foot, and the initial vector from center of robot to feet.
+
+        Returns:
+            4x3 np.matrix (np.zeros([4, 3]))
         """
         if dT <= 0.01:
             dT = 0.01

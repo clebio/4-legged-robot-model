@@ -21,7 +21,7 @@ def limit(angles):
     lims = {
         # Left Front
         0: a(60, 110),
-        1: a(28, 110),
+        1: a(28, 120),
         2: a(60, 130),
         # Left Back
         3: a(42, 100),

@@ -2,3 +2,6 @@
 3D-printable-files/
 .DS_Store
 .vscode/
+telemetry/**
+Pipfile.lock
+venv/

@@ -53,71 +53,7 @@ class Joystick:
         oldVal = self.offset
         valIdx = 0
         for key, _ in self.selector.select():
-            for event in key.fileobj.read():
-                logger.debug(event)
-
-                if event.code == ecodes.BTN_SELECT:
-                    self.unregister()
-                    return ["Shutdown!", *np.zeros(6)]
-                if event.type == ecodes.EV_KEY:
-                    if event.value == 1:
-                        if event.code == 17:  # up arrow
-                            self.CoM_pos[2] += 0.002
-                        if event.code == 545:  # down arrow
-                            self.CoM_pos[2] -= 0.002
-                        if event.code == 547:  # right arrow
-                            self.T += 0.05
-                        if event.code == 546:  # left arrow
-                            self.T -= 0.05
-                        if event.code == 308:  # square
-
-                            self.compliantMode = not self.compliantMode
-                        if event.code == 307:  # triangle
-                            self.poseMode = not self.poseMode
-
-                        if event.code == 310:  # R1
-                            self.calibration += 5
-                        if event.code == 313:  # R2
-                            self.calibration -= 0.0005
-
-                        if event.code == 311:  # L1
-                            self.calibration -= 5
-                        if event.code == 312:  # L2
-                            self.CoM_orn[0] += 0.0005
-                    else:
-                        logger.debug("Unassigned button")
-                ########################################  for my own joystick
-                #      ^           #     ^            #
-                #    ABS_Y         #    ABS_RY        #
-                #  ←─────→ ABS_X #  ←─────→ ABS_RX   #
-                #     ↓           #     ↓            #
-                #######################################
-                if event.type == ecodes.EV_ABS:
-                    absevent = categorize(event)
-                    ty = absevent.event.type
-                    co = absevent.event.code
-                    val = absevent.event.value
-
-                    # TODO:
-                    # Sometimes the inputs from the joystick jump around erratically
-                    # -32010 -32000 200 -32001 -32011 ...
-                    # when this happens, we should ignore those inputs temporarily
-                    if abs(oldVal - val) > self.offset and valIdx < 10:
-                        logging.debug(f"Input event fluctuations! {val}|{oldVal}")
-                        oldVal = val
-                        valIdx += 1
-                        continue
-                    oldVal = val
-
-                    if ecodes.bytype[ty][co] == "ABS_HAT0X":
-                        self.L3[0] = val - self.offset
-                    elif ecodes.bytype[ty][co] == "ABS_HAT0Y":
-                        self.L3[1] = val - self.offset
-
-                    elif ecodes.bytype[ty][co] == "ABS_RX":
-                        self.R3[0] = val - self.offset
-                    elif ecodes.bytype[ty][co] == "ABS_RY":
-                        self.R3[1] = val - self.offset
+            handle_keys(key)
 
         if self.poseMode == False:
             self.V = np.sqrt(self.L3[1] ** 2 + self.L3[0] ** 2) / 100.0
@@ -143,6 +79,73 @@ class Joystick:
             self.T,
             self.compliantMode,
         )
+
+    def handle_keys(self, key):
+        for event in key.fileobj.read():
+            logger.debug(event)
+
+            if event.code == ecodes.BTN_SELECT:
+                self.unregister()
+                return ["Shutdown!", *np.zeros(6)]
+            if event.type == ecodes.EV_KEY:
+                if event.value == 1:
+                    if event.code == 17:  # up arrow
+                        self.CoM_pos[2] += 0.002
+                    if event.code == 545:  # down arrow
+                        self.CoM_pos[2] -= 0.002
+                    if event.code == 547:  # right arrow
+                        self.T += 0.05
+                    if event.code == 546:  # left arrow
+                        self.T -= 0.05
+                    if event.code == 308:  # square
+
+                        self.compliantMode = not self.compliantMode
+                    if event.code == 307:  # triangle
+                        self.poseMode = not self.poseMode
+
+                    if event.code == 310:  # R1
+                        self.calibration += 5
+                    if event.code == 313:  # R2
+                        self.calibration -= 0.0005
+
+                    if event.code == 311:  # L1
+                        self.calibration -= 5
+                    if event.code == 312:  # L2
+                        self.CoM_orn[0] += 0.0005
+                else:
+                    logger.debug("Unassigned button")
+            ########################################  for my own joystick
+            #      ^           #     ^            #
+            #    ABS_Y         #    ABS_RY        #
+            #  ←─────→ ABS_X #  ←─────→ ABS_RX   #
+            #     ↓           #     ↓            #
+            #######################################
+            if event.type == ecodes.EV_ABS:
+                absevent = categorize(event)
+                ty = absevent.event.type
+                co = absevent.event.code
+                val = absevent.event.value
+
+                # TODO:
+                # Sometimes the inputs from the joystick jump around erratically
+                # -32010 -32000 200 -32001 -32011 ...
+                # when this happens, we should ignore those inputs temporarily
+                if abs(oldVal - val) > self.offset and valIdx < 10:
+                    logging.debug(f"Input event fluctuations! {val}|{oldVal}")
+                    oldVal = val
+                    valIdx += 1
+                    continue
+                oldVal = val
+
+                if ecodes.bytype[ty][co] == "ABS_HAT0X":
+                    self.L3[0] = val - self.offset
+                elif ecodes.bytype[ty][co] == "ABS_HAT0Y":
+                    self.L3[1] = val - self.offset
+
+                elif ecodes.bytype[ty][co] == "ABS_RX":
+                    self.R3[0] = val - self.offset
+                elif ecodes.bytype[ty][co] == "ABS_RY":
+                    self.R3[1] = val - self.offset
 
 
 def setup_joystick():

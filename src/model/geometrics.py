@@ -12,6 +12,25 @@ Updates on September, 2020
 import numpy as np
 
 
+def init_robot():
+    # foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
+    Xdist = 0.20
+    Ydist = 0.15
+    height = 0.15
+    B2F0 = np.array(
+        # body frame to foot frame vector
+        [
+            [Xdist / 2, -Ydist / 2, -height],
+            [Xdist / 2, Ydist / 2, -height],
+            [-Xdist / 2, -Ydist / 2, -height],
+            [-Xdist / 2, Ydist / 2, -height],
+        ]
+    )
+    stance = np.array([0.5, 0.0, 0.0, 0.5])
+
+    return B2F0, stance
+
+
 def Rx(roll: float) -> np.matrix:
     """Rotation matrix arround x (roll)"""
     #    roll = np.radians(roll)
