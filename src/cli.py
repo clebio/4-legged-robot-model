@@ -34,6 +34,3 @@ def zero():
 @run.command()
 def calibrate():
     from src.real import calibration
-
-if __name__ == '__main__':
-    cli()
