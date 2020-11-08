@@ -18,10 +18,16 @@ from src.model.gaitPlanner import trotGait
 from src.model import servo
 from src.model.geometrics import init_robot
 from src.utils import run
+import logging
+import sys
 
 
 def iterate_walk(instance, robot, robotID, walker, B2F0, stance):
-    position, orientation, velocity, angle, rotation, dT = instance.update(robotID)
+    try:
+        position, orientation, velocity, angle, rotation, dT = instance.update(robotID)
+    except pb.error as e:
+        logging.warning(e)
+        sys.exit()
 
     # calculates the feet coord for gait, defining length of the step and direction
     # (0º -> forward; 180º -> backward)
@@ -46,7 +52,11 @@ def iterate_walk(instance, robot, robotID, walker, B2F0, stance):
 
 
 def walk():
-    _, boxId = setup_pybullet()
+    try:
+        _, boxId = setup_pybullet()
+    except pb.error as e:
+        logging.warning(e)
+        sys.exit()
     pbdb = pybulletDebug(boxId)
     robot = Quadruped()
     trot = trotGait()
