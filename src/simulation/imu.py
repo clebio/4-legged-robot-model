@@ -26,6 +26,7 @@ from src.utils import run
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+
 def iterate_imu(debugger, robot, robotID, control, orientation, arduino, B2F0):
     position, _, velocity, angle, rotation, dT = debugger.update(robotID)
     if arduino:
@@ -37,7 +38,9 @@ def iterate_imu(debugger, robot, robotID, control, orientation, arduino, B2F0):
                     header, message = line.split("#")
                     # NOTE that x,y,z are not the same order
                     z, y, x, ax, ay, az = [float(s) for s in message.split(" ")]
-                    orientation = np.array([np.deg2rad(x), np.deg2rad(y), np.deg2rad(-z)])
+                    orientation = np.array(
+                        [np.deg2rad(x), np.deg2rad(y), np.deg2rad(-z)]
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to parse arduino: {line} ({e})")
 
@@ -53,7 +56,7 @@ def iterate_imu(debugger, robot, robotID, control, orientation, arduino, B2F0):
 
 def stand():
     interval = 0.05
-    _, boxId = setup_pybullet() # model="cube_small.urdf")
+    _, boxId = setup_pybullet()  # model="cube_small.urdf")
     pbdb = pybulletDebug(boxId)
     robot = Quadruped()
     control = stabilize()

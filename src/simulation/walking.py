@@ -62,4 +62,3 @@ def walk():
     trot = trotGait()
     B2F0, stance = init_robot()
     run(iterate_walk, pbdb, robot, boxId, trot, B2F0, stance)
-    

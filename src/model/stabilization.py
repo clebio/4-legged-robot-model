@@ -49,7 +49,7 @@ class stabilize:
             self.Lci = 0.0
             self.i = 0
             return self.forceAngle, self.Lci
-        
+
         if Xacc >= 7000 or Yacc >= 7000:
             self.collision = True
             self.forceAngle = np.rad2deg(np.arctan2(Yacc, Xacc))

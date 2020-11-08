@@ -36,10 +36,10 @@ else:
 lastTime = 0.0
 interval = 0.03
 
-logger.info("Enabling relay")
-arduino.send("<RELAY#on>")
-
 arduino.clear()
+# logger.info("Enabling relay")
+# arduino.send("<RELAY#on>")
+
 
 while True:
     now = time.time()
