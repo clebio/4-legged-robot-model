@@ -18,12 +18,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 arduino = get_ACM()
 if not arduino:
-    logging.error("No serial device found, are we running on the Raspberry Pi, andis the Arduino connected?")
+    logging.error(
+        "No serial device found, are we running on the Raspberry Pi, and is the Arduino connected?"
+    )
     sys.exit(1)
 arduino.clear()
-arduino.send("<QUIT>")
-logger.info("Enabling relay")
-arduino.send("<RELAY#on>")
+# logger.info("Enabling relay")
+# arduino.send("<RELAY#on>")
 
 while True:
     now = time.time()
@@ -31,8 +32,8 @@ while True:
         continue
     lastTime = now
     logger.debug(f"Loop at {lastTime} ms")
-    logger.info("\n".join(arduino.receive())) 
-    
+    logger.info("\n".join(arduino.receive()))
+
     angles = [90 for _ in range(12)]
 
     s = input("Servo number to adjust ('q' to quit)? ")

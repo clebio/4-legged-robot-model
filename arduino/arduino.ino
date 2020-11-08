@@ -6,12 +6,12 @@
 
 #define ENABLE_RELAY 1
 #define ENABLE_IMU 1
-#define ENABLE_SERVO 0
+#define ENABLE_SERVO 1
 
 #define NUM_SERVOS 12
 #define SERVO_FIRST_PIN 53
 
-const int RELAY_PIN = 40;
+const int RELAY_PIN = A0;
 bool RELAY_ON;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
@@ -232,10 +232,10 @@ String dispatch(String data)
         response = moveServos(message);
     }
 
-    if (type == "RELAY")
-    {
-        response = relayctl(message);
-    }
+    // if (type == "RELAY")
+    // {
+        // response = relayctl(message);
+    // }
     if (type == "QUIT")
     {
         response = shutdown();
@@ -350,7 +350,10 @@ void setup()
     if (ENABLE_RELAY)
     {
         pinMode(RELAY_PIN, OUTPUT);
+        // digitalWrite(RELAY_PIN, HIGH);
         relayctl("on");
+        // delay(interval);
+        // relayctl("off");
     }
 
     if (ENABLE_SERVO)

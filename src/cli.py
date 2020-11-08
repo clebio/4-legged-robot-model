@@ -1,8 +1,5 @@
 import click
 
-from src.simulation import imu, walking
-from src.web import app
-
 
 @click.group()
 def cli():
@@ -11,7 +8,7 @@ def cli():
 
 @cli.group()
 def simulate():
-    pass
+    from src.simulation import imu, walking
 
 
 @cli.group()
@@ -21,6 +18,8 @@ def concurrent():
 
 @cli.command()
 def serve():
+    from src.web import app
+
     app.main()
 
 

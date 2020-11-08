@@ -13,10 +13,10 @@ import serial
 import time
 import numpy
 import glob
-import logging as _logging
+import logging
 
-logging = _logging.getLogger(__name__)
-logging.setLevel(_logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def get_ACM(tty="/dev/ttyACM*"):
@@ -26,11 +26,13 @@ def get_ACM(tty="/dev/ttyACM*"):
     """
     acms = glob.glob(tty)
     if not acms:
+        logging.error(f"No ACM devices in glob")
         return False
     try:
         found = ArduinoSerial(acms.pop(), timeout=1)
+        logger.info(f"Found {found} ACM device")
     except serial.SerialException as e:
-        logging.error(f"Failed to connect to Arduino: {e}")
+        logger.error(f"Failed to connect to Arduino: {e}")
         return False
     return found
 
@@ -52,11 +54,11 @@ class ArduinoSerial:
 
     def test(self):
         x = self.arduino.read()
-        logging.info(ord(x))
+        logger.info(ord(x))
 
     def clear(self):
         if self.arduino.in_waiting > 0:
-            logging.debug(self.receive())
+            logger.debug(self.receive())
 
     def receive(self):
         lines = []
