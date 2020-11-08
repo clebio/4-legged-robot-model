@@ -13,7 +13,8 @@ from functools import partial
 from src.model.kinematics import Quadruped
 from src.model.gaitPlanner import trotGait
 from src.model.geometrics import init_robot
-from src.web.app import server
+
+# from src.web.app import server
 from os import environ
 
 # from src.simulation import run as run_sim
@@ -124,6 +125,6 @@ def main():
     TASKS = [
         # partial(read_joystick, joystick),
         partial(run, instance, robot, boxId, trot, B2F0, stance),
-        server,
+        # server,
     ]
     app(TASKS)

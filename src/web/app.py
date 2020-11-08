@@ -4,6 +4,7 @@ from aiohttp import web, WSCloseCode
 import aiohttp_jinja2
 import jinja2
 from os import path
+import logging as _logging
 
 # from settings import config
 # from routes import setup_routes
@@ -50,7 +51,10 @@ async def handle_json(request):
     return web.json_response(data)
 
 
-async def server():
+async def server(host="127.0.0.1", port=8080):
+    logging = _logging.getLogger(__name__)
+    logging.setLevel(_logging.INFO)
+
     app = web.Application()
     # setup_routes(app)
     # setup_middlewares(app)
@@ -79,7 +83,8 @@ async def server():
     app.on_cleanup.append(cleanup_background_tasks)
 
     await runner.setup()
-    site = web.TCPSite(runner, "127.0.0.1", 8080)
+    logging.warning("Starting web server")
+    site = web.TCPSite(runner, host, port)
     await site.start()
     while True:
         await asyncio.sleep(3600)  # sleep forever by 1 hour intervals
@@ -100,3 +105,7 @@ async def cleanup_background_tasks(app):
     for r in app.get("redis_listener", []):
         r.cancel()
         await r
+
+
+def main():
+    asyncio.run(server())
