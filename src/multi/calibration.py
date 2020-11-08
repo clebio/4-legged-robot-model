@@ -2,7 +2,8 @@ import time
 import asyncio
 import logging
 from src.web.app import server
-
+from functools import partial
+import concurrent
 
 from src.joystick import Joystick, setup_joystick
 
@@ -39,18 +40,19 @@ async def read_joystick(joystick=False):
 
 
 async def setup_joystick_async():
+    loop = asyncio.get_running_loop()
     with concurrent.futures.ProcessPoolExecutor() as pool:
         joystick = await loop.run_in_executor(pool, setup_joystick)
     return joystick
 
 
-if __name__ == "__main__":
+def main():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
     loop = asyncio.new_event_loop()
 
-    joystick = setup_joystick_async()
+    joystick = asyncio.run(setup_joystick_async())
 
     tasks = []
     task_list = [

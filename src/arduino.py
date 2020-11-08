@@ -12,10 +12,11 @@ Updates on September, 2020
 import serial
 import time
 import numpy
-import logging
 import glob
+import logging as _logging
 
-logging.basicConfig(level=logging.WARNING)
+logging = _logging.getLogger(__name__)
+logging.setLevel(_logging.INFO)
 
 
 def get_ACM(tty="/dev/ttyACM*"):

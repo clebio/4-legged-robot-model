@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import logging as _logging
+
+logging = _logging.getLogger(__name__)
+logging.setLevel(_logging.INFO)
+
 try:
     from evdev import InputDevice, categorize, ecodes, list_devices
 except ModuleNotFoundError:
     import inputs
 import numpy as np
-import logging
 import selectors
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 class Joystick:
@@ -156,10 +157,15 @@ def setup_joystick():
     except ModuleNotFoundError:
         from inputs import get_gamepad
 
+    try:
         devices = get_gamepad()
-        # events = get_gamepad()
-        # for event in events:
-        # print(event.ev_type, event.code, event.state)
+    except inputs.UnpluggedError as e:
+        logging.error(e)
+        sys.exit(1)
+
+    # events = get_gamepad()
+    # for event in events:
+    # print(event.ev_type, event.code, event.state)
 
     if not devices:
         raise ValueError("Failed to list any joysticks")

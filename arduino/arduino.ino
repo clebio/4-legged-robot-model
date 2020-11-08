@@ -6,10 +6,13 @@
 
 #define ENABLE_RELAY 1
 #define ENABLE_IMU 1
-#define ENABLE_SERVO 1
+#define ENABLE_SERVO 0
+
 #define NUM_SERVOS 12
 #define SERVO_FIRST_PIN 53
-const int RELAY_PIN = A0;
+
+const int RELAY_PIN = 40;
+bool RELAY_ON;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
 unsigned long loopTime = millis();
@@ -17,11 +20,15 @@ const long interval = 200;
 const String startMarker = "<";
 const String endMarker = ">";
 
+#ifdef ENABLE_SERVO
 Servo Servos[NUM_SERVOS];
 int pulses[NUM_SERVOS];
+#endif
 int i = 0;
 
+#ifdef ENABLE_IMU
 Adafruit_BNO055 bno;
+#endif
 
 String readIMU()
 {
@@ -125,20 +132,23 @@ void setup_imu()
 
 String relayctl(String message)
 {
-    bool _RELAYED = LOW;
     if (!ENABLE_RELAY)
     {
         return "RELAY#Disabled";
     }
-    if (message == "on" || message == "#on")
+
+    if (message == "on")
     {
+        Serial.println("Enabling relay");
+        RELAY_ON = true;
         digitalWrite(RELAY_PIN, HIGH);
     }
-    else
+    else if (message == "off")
     {
+        RELAY_ON = false;
         digitalWrite(RELAY_PIN, LOW);
     }
-    return String(_RELAYED);
+    return message;
 }
 
 String shutdown()
@@ -147,6 +157,7 @@ String shutdown()
     {
         Servos[i].detach();
     }
+    digitalWrite(RELAY_PIN, LOW);
     return "Shutdown complete";
 }
 
@@ -220,6 +231,7 @@ String dispatch(String data)
     {
         response = moveServos(message);
     }
+
     if (type == "RELAY")
     {
         response = relayctl(message);
@@ -251,8 +263,86 @@ void sit()
     delay(interval);
 }
 
+int SERVO_LIM_LOW[NUM_SERVOS] = {
+    // FL
+    544, 544, 544,
+    // BL
+    544, 544, 544,
+    // FR
+    544, 544, 544,
+    // BR
+    544, 544, 544};
+
+int SERVO_LIM_HIGH[NUM_SERVOS] = {
+    // FL
+    2400, 2400, 2400,
+    // BL
+    2400, 2400, 2400,
+    // FR
+    2400, 2400, 2400,
+    // BR
+    2400, 2400, 2400};
+
+void setupServos()
+{
+    // https://www.arduino.cc/en/Reference/ServoAttach
+
+    // Count up from SERVO_FIRST_PIN by 1
+    // for (i = 0; i < NUM_SERVOS; i++)
+    // {
+    //     Servos[i].attach(SERVO_FIRST_PIN + i, SERVO_LIM_LOW[i], SERVO_LIM_HIGH[i]);
+    // }
+
+    // Outer row, short edge
+    // for (i = 0; i < NUM_SERVOS; i++)
+    // {
+    //     // starting at pin 53, count down by two
+    //     // to match the outer row digital pins on the short edge of the Mega
+    //     Servos[i].attach(31 + 2 * i, SERVO_LIM_LOW[i], SERVO_LIM_HIGH[i]);
+    // }
+
+    // Outer and inner row, short edge, six pins on each (half of NUM_SERVOS)
+    // In [3]: [53-2*i for i in range(int(NUM_SERVOS/2))]
+    // Out[3]: [53, 51, 49, 47, 45, 43]
+    // In [8]: [52-2*i for i in range(int(NUM_SERVOS/2))]
+    // Out[8]: [52, 50, 48, 46, 44, 42]
+    for (i = 0; i < (int)(NUM_SERVOS / 2); i++)
+    {
+        // starting at pin 53, count down by two
+        // (outer row digital pins on the short edge of the Mega)
+        Servos[i].attach(53 - 2 * i);
+        // Servos[i].attach(53 - 2 * i, SERVO_LIM_LOW[i], SERVO_LIM_HIGH[i]);
+    }
+    int j = i - (int)(NUM_SERVOS / 2);
+    for (i = (int)(NUM_SERVOS / 2); i < NUM_SERVOS; i++)
+    {
+        j = i - (int)(NUM_SERVOS / 2);
+        // starting at pin 52, count down by two
+        // (inner row digital pins on the short edge of the Mega)
+        Servos[i].attach(52 - 2 * j);
+        // Servos[i].attach(52 - 2 * j, SERVO_LIM_LOW[i], SERVO_LIM_HIGH[i]);
+    }
+    // TODO: do we need to cast NUM_SERVOS / 2 to integer, on Arduino?
+
+    // Jiggle
+    // int angles[] = {80, 100, 90};
+    // for (a = 0; a < 3; a++) {
+    //     for (i = 0; i < NUM_SERVOS; i++)
+    //     {
+    //         Servos[i].write(angles[a]);
+    //     }
+    // }
+    sit();
+}
+
 void setup()
 {
+    Serial.begin(115200);
+    while (!Serial)
+    {
+        delay(interval);
+    }
+
     if (ENABLE_IMU)
     {
         setup_imu();
@@ -263,54 +353,9 @@ void setup()
         relayctl("on");
     }
 
-    Serial.begin(115200);
-    while (!Serial)
-    {
-        delay(interval);
-    }
-
-    // if (ENABLE_SERVO)
-    // {
-    //     for (i = 0; i < NUM_SERVOS; i++)
-    //     {
-    //         Servos[i].attach(SERVO_FIRST_PIN + i);
-    //     }
-    // }
-
     if (ENABLE_SERVO)
     {
-        // TODO: do we need to cast NUM_SERVOS / 2 to integer, on Arduino?
-        // In [3]: [53-2*i for i in range(int(NUM_SERVOS/2))]
-        // Out[3]: [53, 51, 49, 47, 45, 43]
-
-        // In [8]: [52-2*i for i in range(int(NUM_SERVOS/2))]
-        // Out[8]: [52, 50, 48, 46, 44, 42]
-
-        // Outer row, short edge
-        // for (i = 0; i < NUM_SERVOS; i++)
-        // {
-        //     // starting at pin 53, count down by two
-        //     // to match the outer row digital pins on the short edge of the Mega
-        //     Servos[i].attach(31 + 2 * i);
-        // }
-
-        // // outer and inner row, short edge, six pins on each (half of NUM_SERVOS)
-        for (i = 0; i < (int)(NUM_SERVOS / 2); i++)
-        {
-            // starting at pin 53, count down by two
-            // (outer row digital pins on the short edge of the Mega)
-            Servos[i].attach(53 - 2 * i);
-        }
-        int j = i - (int)(NUM_SERVOS / 2);
-        for (i = (int)(NUM_SERVOS / 2); i < NUM_SERVOS; i++)
-        {
-            j = i - (int)(NUM_SERVOS / 2);
-            // starting at pin 52, count down by two
-            // (inner row digital pins on the short edge of the Mega)
-            Servos[i].attach(52 - 2 * j);
-        }
-
-        sit();
+        setupServos();
     }
 }
 
