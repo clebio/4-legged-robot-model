@@ -35,7 +35,7 @@ def networking():
 def setup_pybullet(model="4leggedRobot.urdf", realtime=1, grounded=True):
     pb.connect(pb.GUI)
     pb.setAdditionalSearchPath(pybullet_data.getDataPath())
-    pb.setGravity(0, 0, -9.8)
+    pb.setGravity(0, 0, -9.81)
     pb.setRealTimeSimulation(realtime)
     robot = pb.loadURDF(model, basePosition=[0, 0, 0.2])
     if grounded:

@@ -20,6 +20,8 @@ speed = 10
 
 HEADERS = [
     "IMU",
+    "BNO055",
+    "LSM9DS1",
     "SERVO",
     "LCD",
 ]
@@ -51,7 +53,9 @@ def parse(record):
 
 
 if __name__ == "__main__":
-    ser = serial.Serial("/dev/ttyACM0", 115200, timeout=1)
+    DEVICE = "/dev/cu.usb*"  # MacOS laptop
+    # DEVICE = "/dev/ttyACM*"  # Raspberry Pi
+    ser = serial.Serial("/dev/cu.usbserial-A8008HrG", 115200, timeout=1)
     ser.flush()
     relay = False
 
@@ -61,8 +65,13 @@ if __name__ == "__main__":
         loopTime = time.time()
 
         # TODO: https://github.com/pyserial/pyserial/blob/master/serial/tools/miniterm.py#L499
-        record = ser.read(ser.in_waiting or 1)
-        logging.info(record.decode("utf-8").strip())
+        # record = ser.read(ser.in_waiting or 1)
+
+        while ser.inWaiting():
+            record = ser.readline()
+            record = record.decode("utf-8").strip()
+            # logging.info(record.split("\n"))
+            logging.info(record)
         # parse(record)
 
         moves = []
@@ -75,10 +84,11 @@ if __name__ == "__main__":
             moves.append(f"{i}~{dist}")
         message = "<SERVO#{}>\n".format("#".join(moves))
 
-        state = "on" if relay else "off"
-        logging.info(f"Toggling relay {state}")
-        message = f"<RELAY#{state}>\n"
-        relay = not relay
+        if relay:
+            state = "on"
+            logging.info(f"Toggling relay {state}")
+            message = f"<RELAY#{state}>\n"
+            # relay = not relay
 
         # logging.info(f"Sending: {message}")
         ser.write(bytes(message, "utf-8"))

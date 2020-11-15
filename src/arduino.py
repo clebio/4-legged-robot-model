@@ -65,9 +65,6 @@ class ArduinoSerial:
         try:
             while self.arduino.inWaiting():
                 record = self.arduino.readline()
-                # lines = record.decode("utf-8").strip()
-                # self.arduino.flush()
-                # record = self.arduino.read(self.arduino.in_waiting or 1)
                 record = record.decode("utf-8")
                 lines.extend(l.strip("\n\r") for l in record.split("\n"))
 

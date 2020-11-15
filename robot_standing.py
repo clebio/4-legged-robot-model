@@ -31,6 +31,7 @@ robot = Quadruped()
 ARDUINO = False if environ.get("NO_ARDUINO") else True
 if ARDUINO:
     from src.arduino import ArduinoSerial, get_ACM
+
     arduino = get_ACM()
 else:
     logging.info("Skipping Arduino setup!")
@@ -38,7 +39,7 @@ control = stabilize()
 
 # period of time (in seconds) of every step
 dT = 0.4
-interval = 0.030
+interval = 0.03
 loopTime = time.time()
 
 # Save telemetry data.
@@ -110,7 +111,7 @@ while True:
     forceAngle, Vcompliant = control.bodyCompliant(Xacc, Yacc, compliantMode)
 
     logger.debug(f"Solving for {commandOrn}, {commandPose}, {B2F0}")
-    pose = robot.solve(commandOrn, commandPose, B2F0)
+    pose = robot.solve(commandPose, commandOrn, B2F0)
 
     angles = [np.rad2deg(p) for p in pose.flatten()]
     logger.debug(angles)

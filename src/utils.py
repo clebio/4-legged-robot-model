@@ -7,7 +7,7 @@ logging = _logging.getLogger(__name__)
 logging.setLevel(_logging.INFO)
 
 
-def run(fn, *args, interval=0.05):
+def run(fn, *args, interval=0.02):
     while True:
         now = time.time()
         args = fn(*args)

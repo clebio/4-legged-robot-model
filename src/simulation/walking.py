@@ -22,22 +22,22 @@ import logging
 import sys
 
 
-def iterate_walk(instance, robot, robotID, walker, B2F0, stance):
+def iterate_walk(instance, robot, robotID, control, B2F0, stance):
     try:
         position, orientation, velocity, angle, rotation, dT = instance.update(robotID)
+        logging.debug(orientation)
     except pb.error as e:
         logging.warning(e)
         sys.exit()
 
     # calculates the feet coord for gait, defining length of the step and direction
     # (0º -> forward; 180º -> backward)
-    # bodytoFeet = B2F0
-    bodytoFeet = walker.loop(velocity, angle, rotation, dT, stance, B2F0)
+    bodytoFeet = control.loop(velocity, angle, rotation, dT, stance, B2F0)
 
     # kinematics Model: Input body orientation, deviation and foot position
     # and get the angles, neccesary to reach that position, for every joint
     # FR_angles, FL_angles, BR_angles, BL_angles, bodyToFeet = robot.solve(
-    pose = robot.solve(orientation, position, bodytoFeet)
+    pose = robot.solve(position, orientation, bodytoFeet)
 
     # move movable joints
     # angles = [*FR_angles, *FL_angles, *BR_angles, *BL_angles]
@@ -48,10 +48,10 @@ def iterate_walk(instance, robot, robotID, walker, B2F0, stance):
     indices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
     for i, angle in enumerate(angles):
         pb.setJointMotorControl2(robotID, indices[i], pb.POSITION_CONTROL, angle)
-    return instance, robot, robotID, walker, B2F0, stance
+    return instance, robot, robotID, control, B2F0, stance
 
 
-def walk():
+def go():
     try:
         _, boxId = setup_pybullet()
     except pb.error as e:
@@ -59,6 +59,6 @@ def walk():
         sys.exit()
     pbdb = pybulletDebug(boxId)
     robot = Quadruped()
-    trot = trotGait()
+    control = trotGait()
     B2F0, stance = init_robot()
-    run(iterate_walk, pbdb, robot, boxId, trot, B2F0, stance)
+    run(iterate_walk, pbdb, robot, boxId, control, B2F0, stance)

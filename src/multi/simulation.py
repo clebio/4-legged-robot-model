@@ -62,7 +62,7 @@ async def run(instance, robot, robotID, walker, B2F0, stance):
             FL_angles,
             BR_angles,
             BL_angles,
-        ) = robot.solve(orn, pos, bodytoFeet)
+        ) = robot.solve(pos, orn, bodytoFeet)
 
         angles = [*FR_angles, *FL_angles, *BR_angles, *BL_angles]
 

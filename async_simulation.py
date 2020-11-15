@@ -36,7 +36,7 @@ async def run(instance):
             FL_angles,
             BR_angles,
             BL_angles,
-        ) = robotKinematics.solve(orn, pos, bodytoFeet)
+        ) = robotKinematics.solve(pos, orn, bodytoFeet)
 
         angles = [*FR_angles, *FL_angles, *BR_angles, *BL_angles]
 

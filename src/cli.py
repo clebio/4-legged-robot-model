@@ -8,7 +8,7 @@ def cli():
 
 @cli.group()
 def simulate():
-    from src.simulation import imu, walking
+    pass
 
 
 @cli.group()
@@ -25,12 +25,23 @@ def serve():
 
 @simulate.command()
 def walk():
-    walking.walk()
+    from src.simulation import walking
+
+    walking.go()
 
 
 @simulate.command()
 def imu():
-    imu.stand()
+    from src.simulation import imu as _imu
+
+    _imu.go()
+
+
+@simulate.command()
+def uneven():
+    from src.simulation import uneven_ground
+
+    uneven_ground.go()
 
 
 @cli.group()

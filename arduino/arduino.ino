@@ -16,7 +16,7 @@ bool RELAY_ON;
 
 // https://roboticsbackend.com/raspberry-pi-arduino-serial-communication/#Bidirectional_Serial_communication_between_Raspberry_Pi_and_Arduino
 unsigned long loopTime = millis();
-const long interval = 200;
+const long interval = 20;
 const String startMarker = "<";
 const String endMarker = ">";
 

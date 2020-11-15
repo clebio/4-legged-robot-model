@@ -42,7 +42,7 @@ control = stabilize()
 
 # period of time (in seconds) of every step
 dT = 0.4
-interval = 0.030
+interval = 0.03
 loopTime = time.time()
 
 # Save telemetry data.
@@ -59,7 +59,15 @@ while True:
         continue
     loopTime = now
 
-    commandPose, commandOrn, Vel, angle, Wrot, dT, compliantMode = joystick.read() if JOYSTICK else 0, 0, 0, 0, 0, 0, 0
+    commandPose, commandOrn, Vel, angle, Wrot, dT, compliantMode = (
+        joystick.read() if JOYSTICK else 0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    )
     if commandPose == "Shutdown!":
         logger.info("Shutting down")
         if ARDUINO:
@@ -84,7 +92,7 @@ while True:
     bodytoFeet = trot.loop(Vel + Vcompliant, angle + forceAngle, Wrot, dT)
 
     logger.debug(f"Solving for {commandOrn}, {commandPose}, {bodytoFeet}")
-    pose = robot.solve(commandOrn, commandPose, bodytoFeet)
+    pose = robot.solve(commandPose, commandOrn, bodytoFeet)
 
     angles = [np.rad2deg(p) for p in pose.flatten()]
     logger.debug(angles)
