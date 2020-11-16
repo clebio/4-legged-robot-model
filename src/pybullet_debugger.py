@@ -45,6 +45,8 @@ def setup_pybullet(model="4leggedRobot.urdf", realtime=1, grounded=True):
 
 
 class pybulletDebug:
+    UpdateTuple = Tuple[np.ndarray, np.ndarray, float, float, float, float]
+
     def __init__(self, baseObject):
         # Camera paramers to be able to yaw pitch and zoom the camera (Focus remains on the robot)
         self.base = baseObject
@@ -55,17 +57,15 @@ class pybulletDebug:
         self.xId = pb.addUserDebugParameter("x", -0.10, 0.10, 0.0)
         self.yId = pb.addUserDebugParameter("y", -0.10, 0.10, 0.0)
         self.zId = pb.addUserDebugParameter("z", -0.10, 0.10, 0.0)
-        self.rollId = pb.addUserDebugParameter("roll", -np.pi / 4, np.pi / 4, 0.0)
-        self.pitchId = pb.addUserDebugParameter("pitch", -np.pi / 4, np.pi / 4, 0.0)
-        self.yawId = pb.addUserDebugParameter("yaw", -np.pi / 4, np.pi / 4, 0.0)
+        self.rollId = pb.addUserDebugParameter("roll", -np.pi / 4, np.pi / 4, 0.01)
+        self.pitchId = pb.addUserDebugParameter("pitch", -np.pi / 4, np.pi / 4, 0.01)
+        self.yawId = pb.addUserDebugParameter("yaw", -np.pi / 4, np.pi / 4, 0.01)
         self.LId = pb.addUserDebugParameter("L", -0.5, 1.5, 0.0)
         self.LrotId = pb.addUserDebugParameter("Lrot", -1.5, 1.5, 0.0)
         self.angleId = pb.addUserDebugParameter("angleWalk", -180.0, 180.0, 0.0)
         self.periodId = pb.addUserDebugParameter("stepPeriod", 0.1, 3.0, 0.78)
 
-    def update(
-        self, boxId
-    ) -> Tuple[np.ndarray, np.ndarray, float, float, float, float]:
+    def update(self, boxId) -> UpdateTuple:
         """Update pybullet simulation
 
         Returns:
@@ -76,13 +76,6 @@ class pybulletDebug:
             stride rotation
             step period
         """
-        cubePos, cubeOrn = pb.getBasePositionAndOrientation(boxId)
-        pb.resetDebugVisualizerCamera(
-            cameraDistance=self.cdist,
-            cameraYaw=self.cyaw,
-            cameraPitch=self.cpitch,
-            cameraTargetPosition=cubePos,
-        )
         keys = pb.getKeyboardEvents()
         # Keys to change camera
         if keys.get(100):  # D
@@ -101,6 +94,13 @@ class pybulletDebug:
         if keys.get(27):  # ESC
             pb.disconnect()
             sys.exit()
+
+        # TODO: doesn't work
+        # if keys.get(114):  # R (reset)
+        #     # pb.resetBaseVelocity(self.base, np.zeros(3), np.zeros(4))
+        #     pb.resetBasePositionAndOrientation(
+        #         self.base, [0, 0, 0.2], np.array([*orn, 0.0])
+        #     )
 
         pos = np.array(
             [
@@ -121,11 +121,12 @@ class pybulletDebug:
         angle = pb.readUserDebugParameter(self.angleId)
         period = pb.readUserDebugParameter(self.periodId)
 
-        # TODO: doesn't work
-        # if keys.get(114):  # R (reset)
-        #     # pb.resetBaseVelocity(self.base, np.zeros(3), np.zeros(4))
-        #     pb.resetBasePositionAndOrientation(
-        #         self.base, [0, 0, 0.2], np.array([*orn, 0.0])
-        #     )
+        cubePos, _ = pb.getBasePositionAndOrientation(boxId)
 
+        pb.resetDebugVisualizerCamera(
+            cameraDistance=self.cdist,
+            cameraYaw=self.cyaw,
+            cameraPitch=self.cpitch,
+            cameraTargetPosition=cubePos,
+        )
         return pos, orn, velocity, angle, rotation, period

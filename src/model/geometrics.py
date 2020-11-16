@@ -98,6 +98,8 @@ def RTmatrix(orientation: np.ndarray, position: np.ndarray) -> np.matrix:
 def transform(coord, rotation, translation):
     """transforms a vector to a desire rotation and translation"""
     vector = np.array([[coord[0]], [coord[1]], [coord[2]], [1]])
+    # TODO:
+    # vector = np.array([coord[0], coord[1], coord[2], 1]).transpose()
 
     tranformVector = RTmatrix(rotation, translation) * vector
     return np.array([tranformVector[0, 0], tranformVector[1, 0], tranformVector[2, 0]])

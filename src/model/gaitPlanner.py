@@ -34,8 +34,8 @@ class trotGait:
         https://www.researchgate.net/publication/332374021_Leg_Trajectory_Planning_for_Quadruped_Robots_with_High-Speed_Trot_Gait
     """
 
-    def __init__(self):
-        self.bodytoFeet = np.zeros([4, 3])
+    def __init__(self, b2f=np.zeros([4, 3])):
+        self.bodytoFeet = b2f
         self.phi = 0.0
         self.phiStance = 0.0
         self.lastTime = 0.0

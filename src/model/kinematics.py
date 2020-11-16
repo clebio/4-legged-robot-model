@@ -16,7 +16,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 p2 = lambda x: pow(x, 2)
 
@@ -100,7 +100,7 @@ class Quadruped:
         # self.bodytoBR4 = np.array([-self.Xdist / 2, -self.Ydist / 2, -self.height])
         # self.bodytoBL4 = np.array([-self.Xdist / 2, self.Ydist / 2, -self.height])
 
-    def solve(self, orn: np.ndarray, pos: np.ndarray, bodytoFeet: np.array):
+    def solve(self, pos: np.ndarray, orn: np.ndarray, bodytoFeet: np.array):
         """Solve inverse kinematics
 
         Inputs:
@@ -127,11 +127,11 @@ class Quadruped:
         BRcoord = bodytoBR4 - _bodytoBR0
         BLcoord = bodytoBL4 - _bodytoBL0
         """undo transformation of leg vector to keep feet still"""
-        undoOrn = -orn
-        undoPos = -pos
+        undoOrn = -1 * orn
+        undoPos = -1 * pos
         _FRcoord = geo.transform(FRcoord, undoOrn, undoPos)
-        _FLcoord = geo.transform(FLcoord, undoOrn, undoPos)
         _BRcoord = geo.transform(BRcoord, undoOrn, undoPos)
+        _FLcoord = geo.transform(FLcoord, undoOrn, undoPos)
         _BLcoord = geo.transform(BLcoord, undoOrn, undoPos)
 
         FR_angles = _solve(_FRcoord, self.coxa, self.femur, self.tibia, -1)
@@ -139,10 +139,10 @@ class Quadruped:
         BR_angles = _solve(_BRcoord, self.coxa, self.femur, self.tibia, -1)
         BL_angles = _solve(_BLcoord, self.coxa, self.femur, self.tibia, 1)
 
-        _bodytofeetFR = _bodytoFR0 + _FRcoord
-        _bodytofeetFL = _bodytoFL0 + _FLcoord
-        _bodytofeetBR = _bodytoBR0 + _BRcoord
-        _bodytofeetBL = _bodytoBL0 + _BLcoord
+        # _bodytofeetFR = _bodytoFR0 + _FRcoord
+        # _bodytofeetFL = _bodytoFL0 + _FLcoord
+        # _bodytofeetBR = _bodytoBR0 + _BRcoord
+        # _bodytofeetBL = _bodytoBL0 + _BLcoord
 
         pose = np.array([FR_angles, FL_angles, BR_angles, BL_angles])
         # _bodytofeet = np.array(

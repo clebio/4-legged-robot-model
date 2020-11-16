@@ -20,11 +20,13 @@ from src.utils import run
 
 ALPHA = 0.1
 POSITION = [0, 0, -0.2]
+INTERVAL = 0.02
 
 
 def permute_ground(gnd, now):
-    force = [ALPHA * np.sin(now), ALPHA * np.cos(now), 0]
-    orientation = pb.getQuaternionFromEuler(force)
+    # direction = [0, 0, 0]
+    direction = [ALPHA * np.sin(now), ALPHA * np.cos(now), 0]
+    orientation = pb.getQuaternionFromEuler(direction)
     # logging.debug(orientation)
 
     pb.resetBasePositionAndOrientation(
@@ -32,6 +34,8 @@ def permute_ground(gnd, now):
         ornObj=orientation,
         posObj=POSITION,
     )
+    # return direction
+    return orientation
 
 
 # foot separation (Ydist = 0.16 -> tetta=0) and distance to floor
@@ -52,23 +56,19 @@ stance = np.array([0.5, 0.0, 0.0, 0.5])
 
 def iterate(instance, robot, robotID, control, B2F0, stance, ground):
     now = time.time()
+
+    distance = permute_ground(ground, now)
     position, orientation, velocity, angle, rotation, dT = instance.update(robotID)
+    direction = orientation - pb.getEulerFromQuaternion(distance)
 
     # calculates the feet coord for gait, defining length of the step and direction
     # (0º -> forward; 180º -> backward)
-    # bodytoFeet = B2F0
-    bodytoFeet = control.loop(velocity, angle, rotation, dT, stance, B2F0)
+    b2f = control.loop(velocity, angle, rotation, dT, stance, B2F0)
 
     # kinematics Model: Input body orientation, deviation and foot position
     # and get the angles, neccesary to reach that position, for every joint
-    # FR_angles, FL_angles, BR_angles, BL_angles, bodyToFeet = robot.solve(
-    pose = robot.solve(orientation, position, bodytoFeet)
-
-    # move movable joints
-    # angles = [*FR_angles, *FL_angles, *BR_angles, *BL_angles]
+    pose = robot.solve(position, direction, b2f)
     angles = pose.flatten()
-
-    permute_ground(ground, now)
 
     # TODO: something something jointIds
     # NOTE: this is not just range(12)
@@ -76,8 +76,6 @@ def iterate(instance, robot, robotID, control, B2F0, stance, ground):
     for i, angle in enumerate(angles):
         pb.setJointMotorControl2(robotID, indices[i], pb.POSITION_CONTROL, angle)
 
-    pb.stepSimulation()
-    time.sleep(0.05)
     return instance, robot, robotID, control, B2F0, stance, ground
 
 
@@ -93,12 +91,12 @@ def go():
     shapeID = pb.createVisualShape(pb.GEOM_BOX, halfExtents=[1, 1, 0.1])
     ground = pb.createMultiBody(
         baseMass=0,
-        baseCollisionShapeIndex=groundId,
         basePosition=POSITION,
+        baseCollisionShapeIndex=groundId,
         baseVisualShapeIndex=shapeID,
     )
 
-    robot = Quadruped()
-    control = trotGait()
+    robot = Quadruped(Xdist=Xdist, Ydist=Ydist, height=-height)
     B2F0, stance = init_robot()
+    control = trotGait()
     run(iterate, pbdb, robot, boxId, control, B2F0, stance, ground)
